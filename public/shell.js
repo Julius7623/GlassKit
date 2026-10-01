@@ -10,8 +10,7 @@ qr:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" 
 txt:'<path d="M5 6h14M12 6v13M9 19h6"/>'};
 const TOOLS=[
 {n:'GlassGrab',p:'/grab',d:'Download videos from any link',i:'dl',live:1},
-{n:'GlassPDF',p:'/pdf',d:'Merge, split, and compress PDF files',i:'pdf'},
-{n:'GlassQR',p:'/qr',d:'Create QR codes for links, WiFi, and more',i:'qr'},];
+{n:'GlassQR',p:'/qr',d:'Create QR codes for links, WiFi, and more',i:'qr',live:1},];
 const ico=k=>`<span class="ico"><svg viewBox="0 0 24 24">${P[k]}</svg></span>`;
 window.GlassKit={TOOLS,ico,cards(el){el.innerHTML=TOOLS.map((t,i)=>{const tag=t.live?'a':'div',h=t.live?` href="${t.p}"`:'';
  return `<${tag} class="glass card ${t.live?'live':'soon'}"${h} style="--n:${i}">${ico(t.i)}<b>${t.n}</b><p>${t.d}</p><span class="chip">${t.live?'Open':'Coming soon'}</span></${tag}>`}).join('')}};
@@ -23,7 +22,7 @@ function mount(){
  const sc=D.createElement('div'),dr=D.createElement('nav');
  sc.className='scrim';dr.className='drawer';dr.id='dr';dr.setAttribute('aria-label','Tools');dr.inert=true;
  dr.innerHTML='<div class="dh"><b>GlassKit</b><button class="x" aria-label="Close menu"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
-  +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b></p>';
+  +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b> &middot; <a class="lk" href="/legal">Privacy &amp; Terms</a></p>';
  D.body.append(sc,dr);
  const set=v=>{D.body.classList.toggle('menu',v);mb.setAttribute('aria-expanded',v);dr.inert=!v;(v?dr.querySelector('.x'):mb).focus({preventScroll:true})};
  mb.onclick=()=>{set(true)};sc.onclick=()=>{set(false)};dr.querySelector('.x').onclick=()=>{set(false)};

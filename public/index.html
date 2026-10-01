@@ -13,8 +13,13 @@ var q=new URLSearchParams(location.search);if(q.get('url')||q.get('text'))locati
 try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
-<link rel="stylesheet" href="/base.css">
-<script src="/shell.js" defer></script>
+<link rel="canonical" href="__ORIGIN__/">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
+<meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassKit - Free online tools, no ads, no sign-up"><meta property="og:description" content="Free online tools for everyday files: download videos, create QR codes, and more. No ads, no sign-up."><meta property="og:url" content="__ORIGIN__/"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/base.css?v=2">
+<script src="/shell.js?v=2" defer></script>
 </head>
 <body>
 <header>
@@ -27,10 +32,11 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <main>
   <section class="hero">
     <h1>Free tools for everyday files</h1>
-    <p class="sub">Download, convert, and compress in a few taps. No ads. No sign-up.</p>
+    <p class="sub">Download videos, make QR codes, and more in a few taps. No ads. No sign-up.</p>
   </section>
   <div class="cards" id="cards"></div>
   <p class="foot">New tools are added regularly. Pick one to get started.</p>
+  <p class="foot"><a class="lk" href="/legal">Privacy &amp; Terms</a></p>
   <p class="credit"><b translate="no">Joel G. Thompson</b><span>A just-for-fun side project, built with AI (vibe coding). I hope you like it and find it useful. Thank you, AI!</span></p>
 </main>
 </body>

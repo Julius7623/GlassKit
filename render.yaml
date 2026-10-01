@@ -3,7 +3,7 @@ services:
     name: glassdl
     runtime: docker
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /healthz
     envVars:
       - key: YT_COOKIES
         sync: false

@@ -203,3 +203,16 @@ body.menu .drawer{transform:none}
 .bar.shake{animation:shake .4s var(--e)}
 #t{border-radius:24px}
 #t{width:max-content;max-width:min(92vw,420px)}
+
+.lk{color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(127,127,127,.5)}
+.pgb{display:block;height:4px;border-radius:99px;background:rgba(127,127,127,.22);overflow:hidden;margin-top:14px}
+.pgb i{display:block;height:100%;width:40%;border-radius:inherit;background:var(--ac);animation:slide 1.3s var(--e) infinite}
+@keyframes slide{from{translate:-100%}to{translate:260%}}
+.hint{display:block;margin-top:10px;font-size:13px;color:var(--t2)}
+.fmt.busy{opacity:1}
+.rch{display:flex;align-items:baseline;justify-content:space-between;margin:var(--s5) var(--s2) var(--s2)}
+.rch b{font-size:15px;font-weight:600}.rch button{font-size:13px;color:var(--t2);padding:8px 4px}
+.rc{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;margin-bottom:8px;border-radius:var(--r-m);text-align:left;background:var(--g);border:1px solid var(--gb)}
+.rc svg{width:22px;height:22px;flex:none}.rc span{display:flex;flex-direction:column;min-width:0}
+.rc b{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rc small{font-size:12.5px;color:var(--t2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rch button{background:none}

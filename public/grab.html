@@ -12,8 +12,13 @@
 try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
-<link rel="stylesheet" href="/base.css">
-<script src="/shell.js" defer></script>
+<link rel="canonical" href="__ORIGIN__/grab">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
+<meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/base.css?v=2">
+<script src="/shell.js?v=2" defer></script>
 
 </head>
 <body data-own-theme>
@@ -34,17 +39,17 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
     <button class="ghost" id="p" data-i="paste"></button>
     <button class="btn" id="go" data-i="go"></button>
   </div>
-  <div id="out" class="anim"><p class="empty" data-i="empty"></p></div>
+  <div id="out" class="anim" aria-live="polite"><p class="empty" data-i="empty"></p></div>
   <p class="foot" data-i="foot"></p>
+  <p class="foot"><a class="lk" href="/legal">Privacy &amp; Terms</a></p>
 </main>
 <div class="glass" id="t" role="status" aria-live="polite"></div>
 <script>
-const L={en:{doc:'GlassGrab - Download videos from any link',credit:'A just-for-fun side project, built with AI (vibe coding). I hope you like it and find it useful. Thank you, AI!',h1:'Download videos from any link',sub:'Works with YouTube, Instagram, TikTok, Facebook, X, and thousands of other sites. No ads. No sign-up.',ph:'Paste a video link here',paste:'Paste',go:'Search',empty:'Paste a link, then choose a format.',foot:'For content you own, have a license for, or personal use only. Links and files are never saved.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added for you',ao:'Audio only',aoh:'Sound without the video',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',merged:'audio included',about:'about',unk:'size unknown',prep:'Preparing file...',started:'Download started: ',badurl:'Enter a link that starts with http or https',clip:'Allow clipboard access, or paste the link manually',fail:'Could not load the video',retry:'. Check the link or try again.',failprep:'Could not prepare the file',look:'Looking up the video...',wait:'Getting video details and available formats. This usually takes a few seconds.',slow:'Still working. The server may take a little longer to start, please wait.'}};
-const E={'Link tidak valid':'Invalid link','Hanya link http/https':'Only http/https links','Alamat tidak diizinkan':'Address not allowed','Video ini privat atau perlu login':'This video is private or requires login','Link ini belum didukung':'This link is not supported yet','Video tidak tersedia':'Video unavailable','Platform membatasi permintaan, coba lagi nanti':'The platform is rate limiting, try again later','File terlalu besar (maks 2 GB)':'File too large (max 2 GB)','Gagal memproses video. Coba lagi nanti.':'Could not process the video. Try again later.','Format tidak valid':'Invalid format','Server sedang sibuk, coba sebentar lagi':'Server is busy, try again shortly','File sudah kedaluwarsa, siapkan ulang':'File expired, prepare it again','Terjadi kesalahan server':'Server error'};
+const L={en:{doc:'GlassGrab - Download videos from any link',h1:'Download videos from any link',sub:'Works with YouTube, Instagram, TikTok, Facebook, X, and thousands of other sites. No ads. No sign-up.',ph:'Paste a video link here',paste:'Paste',go:'Search',empty:'Paste a link, then choose a format.',foot:'For content you own, have a license for, or personal use only. Links and files are never saved.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added for you',ao:'Audio only',aoh:'Sound without the video',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'size unknown',prep:'Preparing file...',started:'Download started: ',clip:'Allow clipboard access, or paste the link manually',look:'Looking up the video...',wait:'Getting video details and available formats. This usually takes a few seconds.',slow:'Still working. The server may take a little longer to start, please wait.'}};
 const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const lang='en';let cur=null,lastErr=null;
-const t=k=>L[lang][k],tr=m=>lang==='id'?m:(E[m]||m);
+const t=k=>L[lang][k];
 const sites={youtu:'YouTube',instagram:'Instagram',facebook:'Facebook','fb.':'Facebook',tiktok:'TikTok','x.com':'X',twitter:'X',reddit:'Reddit',vimeo:'Vimeo',twitch:'Twitch'};
 const IC={
 YouTube:'<svg viewBox="0 0 24 24"><rect x="1.5" y="5" width="21" height="14" rx="4.2" fill="#f03"/><path d="M10 9l5.200 3-5.200 3z" fill="#fff"/></svg>',
@@ -87,6 +92,10 @@ function sw(el,get,set){
 }
 sw(tsw,dark,v=>theme(v?'dark':'light'));
 
+const RK='recent',recents=()=>{try{return JSON.parse(store(RK)||'[]')}catch(e){return[]}};
+function remember(url,title){const l=recents().filter(x=>x.u!==url);l.unshift({u:url,t:title||url});store(RK,JSON.stringify(l.slice(0,4)))}
+function emptyHTML(){const l=recents();
+  return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(s||'Link')}</small></span></button>`}).join(''):'')}
 const put=h=>{out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim')};
 const ER=[
 [/YouTube memblokir/,{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1}],
@@ -126,7 +135,7 @@ async function load(){
   try{
     const r=await fetch('/api/info?url='+encodeURIComponent(url)),d=await r.json();
     if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});
-    cur=d;show(d);
+    cur=d;show(d);remember(url,d.title);
   }catch(e){fail(e)}finally{done()}
 }
 
@@ -149,27 +158,34 @@ function show(d){
 }
 
 out.onclick=async ev=>{
-  const b=ev.target.closest('.fmt');if(!b)return;
-  const {f,k,e}=b.dataset,old=b.innerHTML;
-  b.disabled=true;b.querySelector('b').textContent=t('prep');
+  const rc=ev.target.closest('.rc');
+  if(rc){u.value=rc.dataset.u;u.oninput();return load()}
+  if(ev.target.closest('.rcx')){store('recent','[]');return put(emptyHTML())}
+  const b=ev.target.closest('.fmt');if(!b||out.dataset.busy)return;
+  out.dataset.busy=1;
+  const {f,k,e}=b.dataset,old=b.innerHTML,t0=Date.now();
+  b.disabled=true;b.classList.add('busy');
+  b.innerHTML=`<b>${t('prep')}<em class="el">0:00</em></b><span class="pgb"><i></i></span><span class="hint">Keep this page open.</span>`;
+  const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=b.querySelector('.el');if(!el)return;el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(s===12)b.querySelector('.hint').textContent='Larger files can take a minute or more. Please keep this page open.'},1000);
   try{
     const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}`),d=await r.json();
     if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});
     const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
     say(t('started')+MB(d.size,true));
-  }catch(x){const e=explain(x);say(e.title+'. '+e.tip,5200)}
-  b.innerHTML=old;b.disabled=false;
+  }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
+  finally{clearInterval(tick);delete out.dataset.busy;b.classList.remove('busy');b.innerHTML=old;b.disabled=false}
 };
+
 
 u.oninput=()=>{const b=$('#bd'),v=u.value.trim(),x=site(v);
   if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',x);b.title=x;b.classList.remove('hide')}else b.classList.add('hide');
   xb.classList.toggle('hide',!v);gh.classList.toggle('hide',!!v)};
-xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put('<p class="empty">'+t('empty')+'</p>');u.focus()};
+xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put(emptyHTML());u.focus()};
 u.onpaste=()=>setTimeout(()=>{u.oninput();load()},60);
 u.onkeydown=e=>{if(e.key==='Enter')load()};
 $('#go').onclick=load;
 $('#p').onclick=async()=>{try{u.value=await navigator.clipboard.readText();u.oninput();load()}catch{say(t('clip'))}};
-theme(document.documentElement.dataset.theme);apply();requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('ready')));
+theme(document.documentElement.dataset.theme);apply();put(emptyHTML());requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('ready')));
 const q=new URLSearchParams(location.search),pre=q.get('url')||q.get('text');
 if(pre){u.value=pre;u.oninput();load()}
 </script>

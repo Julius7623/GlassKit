@@ -3,7 +3,7 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import { spawn, execFile } from 'node:child_process';
 import { mkdtemp, rm, readdir, stat } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
+import { createReadStream, readFileSync } from 'node:fs';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -14,7 +14,24 @@ import { fileURLToPath } from 'node:url';
 
 const app = Fastify({ logger: false, trustProxy: true }); // logger off: URL tidak pernah dicatat
 await app.register(rateLimit, { max: 20, timeWindow: '1 minute' });
-await app.register(fastifyStatic, { root: fileURLToPath(new URL('./public', import.meta.url)), extensions: ['html'] });
+const PUB = fileURLToPath(new URL('./public', import.meta.url));
+await app.register(fastifyStatic, {
+  root: PUB, extensions: ['html'], index: false,
+  setHeaders: (res, p) => res.setHeader('Cache-Control',
+    /\.(css|js)$/.test(p) ? 'public, max-age=3600' : /\.(png|webmanifest)$/.test(p) ? 'public, max-age=86400' : 'no-cache'),
+});
+
+// Halaman HTML: isi __ORIGIN__ dengan domain asli (untuk canonical, Open Graph, sitemap)
+const PAGES = { '/': 'index', '/grab': 'grab', '/qr': 'qr', '/legal': 'legal' };
+const html = Object.fromEntries(Object.entries(PAGES).map(([p, f]) => [p, readFileSync(join(PUB, f + '.html'), 'utf8')]));
+const origin = q => `${q.protocol}://${q.hostname}`;
+for (const p of Object.keys(PAGES))
+  app.get(p, (q, r) => r.type('text/html; charset=utf-8').header('Cache-Control', 'no-cache').send(html[p].replaceAll('__ORIGIN__', origin(q))));
+app.get('/sitemap.xml', (q, r) => r.type('application/xml').send(
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+  Object.keys(PAGES).map(p => `  <url><loc>${origin(q)}${p === '/' ? '' : p}</loc></url>`).join('\n') + `\n</urlset>\n`));
+app.get('/robots.txt', (q, r) => r.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${origin(q)}/sitemap.xml\n`));
+app.get('/healthz', (_q, r) => r.type('text/plain').send('ok')); // untuk UptimeRobot dkk
 app.addHook('onSend', async (_q, r) => { r.header('X-Content-Type-Options', 'nosniff'); r.header('Referrer-Policy', 'strict-origin-when-cross-origin'); });
 app.setErrorHandler((e, _q, r) =>
   r.code(e.statusCode || 500).send({ error: e.statusCode < 500 ? e.message : 'Terjadi kesalahan server' }));
