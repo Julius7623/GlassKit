@@ -15,15 +15,6 @@ const TOOLS=[
 const ico=k=>`<span class="ico"><svg viewBox="0 0 24 24">${P[k]}</svg></span>`;
 window.GlassKit={TOOLS,ico,cards(el){el.innerHTML=TOOLS.map((t,i)=>{const tag=t.live?'a':'div',h=t.live?` href="${t.p}"`:'';
  return `<${tag} class="glass card ${t.live?'live':'soon'}"${h} style="--n:${i}">${ico(t.i)}<b>${t.n}</b><p>${t.d}</p><span class="chip">${t.live?'Open':'Coming soon'}</span></${tag}>`}).join('')}};
-const ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-const PAT={tick:[6],light:[10],medium:[20],success:[12,70,22],error:[22,60,22,60,30]};
-let lab;
-const tickIOS=()=>{try{if(!lab){const i=D.createElement('input');i.type='checkbox';i.id='_hp';i.setAttribute('switch','');i.tabIndex=-1;
- lab=D.createElement('label');lab.htmlFor='_hp';lab.setAttribute('aria-hidden','true');lab.style.cssText='position:fixed;left:-99px;top:0;width:1px;height:1px;opacity:0;pointer-events:none';lab.append(i);D.body.append(lab)}lab.click()}catch(e){}};
-/* haptic: Android pakai vibrate, iPhone pakai trik checkbox switch (Safari 17.4+). Tanpa dukungan = diam, tanpa error */
-GlassKit.haptic=(k='light')=>{const p=PAT[k]||PAT.light;
- if(!ios&&navigator.vibrate){navigator.vibrate(p);return}
- if(ios){let t=0;p.forEach((ms,i)=>{if(i%2===0)setTimeout(tickIOS,t);t+=ms})}};
 const here=location.pathname.replace(/\/$/,'').replace(/\.html$/,'')||'/';
 const item=(t,cur)=>{const live=t.live||t.home,tag=live?'a':'div';
  return `<${tag} class="di${cur?' cur':''}${live?'':' soon'}"${live?` href="${t.p}"`:' aria-disabled="true"'}${cur?' aria-current="page"':''}>${ico(t.i)}<span class="tx"><b>${t.n}</b><small>${t.d}</small></span>${live?'':'<span class="chip">Soon</span>'}</${tag}>`};
@@ -35,7 +26,7 @@ function mount(){
   +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b></p>';
  D.body.append(sc,dr);
  const set=v=>{D.body.classList.toggle('menu',v);mb.setAttribute('aria-expanded',v);dr.inert=!v;(v?dr.querySelector('.x'):mb).focus({preventScroll:true})};
- mb.onclick=()=>{GlassKit.haptic('light');set(true)};sc.onclick=()=>{GlassKit.haptic('tick');set(false)};dr.querySelector('.x').onclick=()=>{GlassKit.haptic('tick');set(false)};
+ mb.onclick=()=>{set(true)};sc.onclick=()=>{set(false)};dr.querySelector('.x').onclick=()=>{set(false)};
  dr.onclick=e=>{if(e.target.closest('a'))set(false)};
  D.addEventListener('keydown',e=>e.key==='Escape'&&D.body.classList.contains('menu')&&set(false));
 }
@@ -45,9 +36,9 @@ function themeInit(){
  const sync=()=>{tsw.classList.toggle('on',dark());tsw.setAttribute('aria-checked',dark());$('meta[name=theme-color]').content=dark()?'#0a0a0a':'#f5f5f5'};
  const set=v=>{R.dataset.theme=v?'dark':'light';st(R.dataset.theme);sync()};
  let id=null,x0=0,p0=0,trv=0,mv=false;
- tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;GlassKit.haptic('tick');clearTimeout(tsw._t);tsw.classList.add('press')});
+ tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;clearTimeout(tsw._t);tsw.classList.add('press')});
  tsw.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;tsw.classList.add('drag');tsw.style.setProperty('--x',Math.max(0,Math.min(trv,p0+dx))+'px')});
- const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=dark();if(ok)v=mv?parseFloat(tsw.style.getPropertyValue('--x'))>trv/2:!v;tsw.classList.remove('drag');tsw.style.removeProperty('--x');clearTimeout(tsw._t);if(v!==dark()){tsw._t=setTimeout(()=>tsw.classList.remove('press'),180);GlassKit.haptic('medium');set(v)}else tsw.classList.remove('press')};
+ const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=dark();if(ok)v=mv?parseFloat(tsw.style.getPropertyValue('--x'))>trv/2:!v;tsw.classList.remove('drag');tsw.style.removeProperty('--x');clearTimeout(tsw._t);if(v!==dark()){tsw._t=setTimeout(()=>tsw.classList.remove('press'),180);set(v)}else tsw.classList.remove('press')};
  tsw.addEventListener('pointerup',e=>end(e,true));tsw.addEventListener('pointercancel',e=>end(e,false));
  tsw.addEventListener('click',e=>{if(e.detail===0)set(!dark())});
  sync();requestAnimationFrame(()=>requestAnimationFrame(()=>R.classList.add('ready')));

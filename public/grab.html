@@ -42,7 +42,6 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 const L={en:{doc:'GlassGrab - Download videos from any link',credit:'A just-for-fun side project, built with AI (vibe coding). I hope you like it and find it useful. Thank you, AI!',h1:'Download videos from any link',sub:'Works with YouTube, Instagram, TikTok, Facebook, X, and thousands of other sites. No ads. No sign-up.',ph:'Paste a video link here',paste:'Paste',go:'Search',empty:'Paste a link, then choose a format.',foot:'For content you own, have a license for, or personal use only. Links and files are never saved.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added for you',ao:'Audio only',aoh:'Sound without the video',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',merged:'audio included',about:'about',unk:'size unknown',prep:'Preparing file...',started:'Download started: ',badurl:'Enter a link that starts with http or https',clip:'Allow clipboard access, or paste the link manually',fail:'Could not load the video',retry:'. Check the link or try again.',failprep:'Could not prepare the file',look:'Looking up the video...',wait:'Getting video details and available formats. This usually takes a few seconds.',slow:'Still working. The server may take a little longer to start, please wait.'}};
 const E={'Link tidak valid':'Invalid link','Hanya link http/https':'Only http/https links','Alamat tidak diizinkan':'Address not allowed','Video ini privat atau perlu login':'This video is private or requires login','Link ini belum didukung':'This link is not supported yet','Video tidak tersedia':'Video unavailable','Platform membatasi permintaan, coba lagi nanti':'The platform is rate limiting, try again later','File terlalu besar (maks 2 GB)':'File too large (max 2 GB)','Gagal memproses video. Coba lagi nanti.':'Could not process the video. Try again later.','Format tidak valid':'Invalid format','Server sedang sibuk, coba sebentar lagi':'Server is busy, try again shortly','File sudah kedaluwarsa, siapkan ulang':'File expired, prepare it again','Terjadi kesalahan server':'Server error'};
 const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
-const H=k=>{try{window.GlassKit&&GlassKit.haptic(k)}catch(e){}};
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const lang='en';let cur=null,lastErr=null;
 const t=k=>L[lang][k],tr=m=>lang==='id'?m:(E[m]||m);
@@ -78,11 +77,11 @@ function theme(v){
 }
 function sw(el,get,set){
   let id=null,x0=0,p0=0,trv=0,mv=false;
-  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);x0=e.clientX;trv=el.offsetWidth-44;p0=get()?trv:0;mv=false;H('tick');clearTimeout(el._t);el.classList.add('press')});
+  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);x0=e.clientX;trv=el.offsetWidth-44;p0=get()?trv:0;mv=false;clearTimeout(el._t);el.classList.add('press')});
   el.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;el.classList.add('drag');el.style.setProperty('--x',Math.max(0,Math.min(trv,p0+dx))+'px')});
   const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=get();
     if(ok)v=mv?parseFloat(el.style.getPropertyValue('--x'))>trv/2:!v;
-    el.classList.remove('drag');el.style.removeProperty('--x');clearTimeout(el._t);if(v!==get()){el._t=setTimeout(()=>el.classList.remove('press'),180);H('medium');set(v)}else el.classList.remove('press')};
+    el.classList.remove('drag');el.style.removeProperty('--x');clearTimeout(el._t);if(v!==get()){el._t=setTimeout(()=>el.classList.remove('press'),180);set(v)}else el.classList.remove('press')};
   el.addEventListener('pointerup',e=>end(e,true));el.addEventListener('pointercancel',e=>end(e,false));
   el.addEventListener('click',e=>{if(e.detail===0)set(!get())});
 }
@@ -90,6 +89,7 @@ sw(tsw,dark,v=>theme(v?'dark':'light'));
 
 const put=h=>{out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim')};
 const ER=[
+[/YouTube memblokir/,{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1}],
 [/Link tidak valid|Hanya link/,{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'}],
 [/Alamat tidak diizinkan/,{title:"This address can't be used",why:'Links to private or local addresses are blocked for safety.',tip:'Use a public video link instead.'}],
 [/privat|login/,{title:'This video is private',why:'It needs a login, or only certain people can watch it.',tip:'Try a public video, or one you can open without signing in.'}],
@@ -104,8 +104,8 @@ const ER=[
 const NET={title:'No connection',why:"We couldn't reach the server.",tip:'Check your internet connection, then try again.',retry:1};
 const GEN={title:'Something went wrong',why:'An unexpected error happened on our side.',tip:'Try again in a moment.',retry:1};
 const explain=e=>{if(!e)return GEN;if(e instanceof TypeError||/failed to fetch|load failed|network/i.test(e.message))return NET;
- if(e.status===429)return ER[5][1];const m=ER.find(x=>x[0].test(e.message||''));return m?m[1]:GEN};
-const fail=e=>{lastErr=e;const x=explain(e);H('error');
+ if(e.status===429)return ER.find(x=>/rate limit/.test(x[0].source))[1];const m=ER.find(x=>x[0].test(e.message||''));return m?m[1]:GEN};
+const fail=e=>{lastErr=e;const x=explain(e);
   put(`<div class="glass err" role="alert"><div class="eic"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 16.5v.01"/><path d="M10.300 4.500L3.500 17a2 2 0 0 0 1.700 3h13.600a2 2 0 0 0 1.700-3L13.700 4.500a2 2 0 0 0-3.400 0z"/></svg></div><b>${x.title}</b><p>${x.why}</p><p class="tip">${x.tip}</p><div class="eb">${x.retry?'<button class="btn" id="rt">Try again</button>':''}<button class="ghost" id="cl">Clear link</button></div></div>`);
   const r=$('#rt');if(r)r.onclick=()=>load();$('#cl').onclick=()=>xb.click()};
 let slowT;
@@ -119,9 +119,10 @@ const xb=$('#x'),gh=$('#p');
 function lock(v){$('#go').disabled=xb.disabled=gh.disabled=u.readOnly=v}
 async function load(){
   if($('#go').disabled)return;
-  const url=u.value.trim();
-  if(!/^https?:\/\//i.test(url)){H('error');const b=$('.bar');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');return say("That doesn't look like a link. Paste a full link that starts with http or https.",4500)}
-  H('light');cur=lastErr=null;loading();
+  let url=u.value.trim();
+  if(url&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(url)&&/^[^\s\/]+\.[^\s\/]{2,}(\/|$|\?)/.test(url)){url='https://'+url.replace(/^\/+/,'');u.value=url;u.oninput()}
+  if(!/^https?:\/\//i.test(url)){const b=$('.bar');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');return say("That doesn't look like a link. Paste a full link that starts with http or https.",4500)}
+  cur=lastErr=null;loading();
   try{
     const r=await fetch('/api/info?url='+encodeURIComponent(url)),d=await r.json();
     if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});
@@ -150,22 +151,22 @@ function show(d){
 out.onclick=async ev=>{
   const b=ev.target.closest('.fmt');if(!b)return;
   const {f,k,e}=b.dataset,old=b.innerHTML;
-  H('medium');b.disabled=true;b.querySelector('b').textContent=t('prep');
+  b.disabled=true;b.querySelector('b').textContent=t('prep');
   try{
     const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}`),d=await r.json();
     if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});
     const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
-    H('success');say(t('started')+MB(d.size,true));
-  }catch(x){const e=explain(x);H('error');say(e.title+'. '+e.tip,5200)}
+    say(t('started')+MB(d.size,true));
+  }catch(x){const e=explain(x);say(e.title+'. '+e.tip,5200)}
   b.innerHTML=old;b.disabled=false;
 };
 
 u.oninput=()=>{const b=$('#bd'),v=u.value.trim(),x=site(v);
   if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',x);b.title=x;b.classList.remove('hide')}else b.classList.add('hide');
   xb.classList.toggle('hide',!v);gh.classList.toggle('hide',!!v)};
-xb.onclick=()=>{if(xb.disabled)return;H('light');u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put('<p class="empty">'+t('empty')+'</p>');u.focus()};
+xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put('<p class="empty">'+t('empty')+'</p>');u.focus()};
 u.onpaste=()=>setTimeout(()=>{u.oninput();load()},60);
-u.onkeydown=e=>e.key==='Enter'&&load();
+u.onkeydown=e=>{if(e.key==='Enter')load()};
 $('#go').onclick=load;
 $('#p').onclick=async()=>{try{u.value=await navigator.clipboard.readText();u.oninput();load()}catch{say(t('clip'))}};
 theme(document.documentElement.dataset.theme);apply();requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('ready')));

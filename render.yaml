@@ -4,3 +4,6 @@ services:
     runtime: docker
     plan: free
     healthCheckPath: /
+    envVars:
+      - key: YT_COOKIES
+        sync: false

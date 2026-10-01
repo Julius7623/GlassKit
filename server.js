@@ -8,7 +8,8 @@ import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const app = Fastify({ logger: false, trustProxy: true }); // logger off: URL tidak pernah dicatat
@@ -30,31 +31,69 @@ async function safeUrl(raw = '') {
   return u.href;
 }
 
+const BOT = 'YouTube memblokir permintaan dari server ini';
 const friendly = s =>
-  /private|log ?in|sign in|cookies/i.test(s) ? 'Video ini privat atau perlu login'
+  /confirm you.?re not a bot|not a bot/i.test(s) ? BOT
+  : /private|log ?in|sign in|cookies/i.test(s) ? 'Video ini privat atau perlu login'
   : /unsupported url/i.test(s) ? 'Link ini belum didukung'
   : /unavailable|removed|not exist|404/i.test(s) ? 'Video tidak tersedia'
   : /429|too many/i.test(s) ? 'Platform membatasi permintaan, coba lagi nanti'
   : /larger than/i.test(s) ? 'File terlalu besar (maks 2 GB)'
   : 'Gagal memproses video. Coba lagi nanti.';
 
+// Cookies YouTube (opsional): isi env YT_COOKIES dengan isi cookies.txt format Netscape
+const COOKIES = '/tmp/yt-cookies.txt';
+const hasCookies = !!process.env.YT_COOKIES;
+if (hasCookies) writeFileSync(COOKIES, process.env.YT_COOKIES, { mode: 0o600 });
+
 const run = (args, ms = 600000) => new Promise((ok, no) => {
-  const p = spawn('yt-dlp', ['--no-playlist', '--no-warnings', '--no-cache-dir', '--socket-timeout', '15', ...args]);
+  const p = spawn('yt-dlp', ['-4', '--js-runtimes', 'node', '--no-playlist', '--no-warnings', '--no-cache-dir', '--socket-timeout', '15', ...args]);
   let out = '', e = '';
   const t = setTimeout(() => p.kill('SIGKILL'), ms);
   p.stdout.on('data', d => out += d);
   p.stderr.on('data', d => e += d);
   p.on('error', () => no(err(500, 'yt-dlp tidak ditemukan')));
-  p.on('close', c => { clearTimeout(t); c ? no(err(422, friendly(e))) : ok(out); });
+  p.on('close', c => {
+    clearTimeout(t);
+    if (c && process.env.DEBUG_YTDLP) console.error('[yt-dlp]', e.trim().split('\n').slice(-3).join(' | ').slice(0, 400));
+    c ? no(err(422, friendly(e))) : ok(out);
+  });
 });
 
 const short = c => !c || c === 'none' ? null
   : /^avc/.test(c) ? 'H.264' : /^(hev|hvc)/.test(c) ? 'H.265' : /^av01/.test(c) ? 'AV1'
   : /^vp0?9/.test(c) ? 'VP9' : /^mp4a/.test(c) ? 'AAC' : /^opus/.test(c) ? 'Opus' : c.split('.')[0].toUpperCase();
 
+// YouTube sering memblokir IP datacenter. Coba beberapa player client, ingat yang berhasil (hash, bukan URL).
+const isYT = u => { try { return /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/i.test(new URL(u).hostname); } catch { return false; } };
+const CLIENTS = [['tv'], [], ['mweb'], ['web_safari']];
+const good = new Map();
+async function tryClients(url, fn) {
+  if (!isYT(url)) return fn([]);
+  const key = createHash('sha1').update(url).digest('hex');
+  const g = good.get(key);
+  const order = CLIENTS.map((_, i) => i);
+  if (g !== undefined) order.sort((a, b) => (a === g ? -1 : b === g ? 1 : 0));
+  const base = hasCookies ? ['--cookies', COOKIES] : [];
+  let last;
+  for (const i of order) {
+    const c = CLIENTS[i];
+    try {
+      const r = await fn([...base, ...(c.length ? ['--extractor-args', 'youtube:player_client=' + c.join(',')] : [])]);
+      if (good.size > 500) good.clear();
+      good.set(key, i);
+      return r;
+    } catch (e) {
+      last = e;
+      if (e.message !== BOT && !/^Gagal memproses/.test(e.message)) throw e; // video privat/hilang/dll: tidak perlu coba lagi
+    }
+  }
+  throw last;
+}
+
 app.get('/api/info', async req => {
   const url = await safeUrl(req.query.url);
-  const j = JSON.parse(await run(['-J', url], 60000));
+  const j = JSON.parse(await tryClients(url, ex => run([...ex, '-J', url], 40000)));
   const dur = j.duration || 0;
   const map = new Map();
   for (const x of j.formats || []) {
@@ -93,7 +132,7 @@ app.get('/api/prepare', async req => {
     if (f === 'mp3') a.push('-x', '--audio-format', 'mp3', '--audio-quality', '0');
     else if (k === 'v') a.push('-f', `${f}+ba[ext=${e === 'mp4' ? 'm4a' : 'webm'}]/${f}+ba`, '--merge-output-format', e === 'mp4' || e === 'webm' ? e : 'mkv');
     else a.push('-f', f);
-    await run([...a, url]);
+    await tryClients(url, ex => run([...ex, ...a, url]));
     const [name] = await readdir(dir);
     const { size } = await stat(join(dir, name));
     const token = randomUUID();
