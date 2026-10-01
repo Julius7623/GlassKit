@@ -190,3 +190,16 @@ body.menu .drawer{transform:none}
 .chip,.tag{font-size:11px}
 #t{padding:14px var(--s5)}
 .drawer{background:color-mix(in srgb,var(--bg) 82%,transparent)}
+
+.err{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px;padding:32px 24px 24px;text-align:center}
+.eic{width:56px;height:56px;border-radius:22.37%;display:grid;place-items:center;background:rgba(127,127,127,.18);margin-bottom:4px}
+.eic svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.err b{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.err p{color:var(--t2);font-size:15px;line-height:1.4;max-width:380px;text-wrap:balance}
+.err .tip{color:var(--t)}
+.eb{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px}
+.eb .btn,.eb .ghost{min-width:128px}
+@keyframes shake{20%,60%{translate:-6px 0}40%,80%{translate:6px 0}}
+.bar.shake{animation:shake .4s var(--e)}
+#t{border-radius:24px}
+#t{width:max-content;max-width:min(92vw,420px)}
