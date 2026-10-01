@@ -49,13 +49,13 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 .iso{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;border-radius:7px;background:rgba(127,127,127,.2);font-style:normal;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--t2)}
 
 /* Country picker sheet */
-.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;visibility:hidden;pointer-events:none;transition:visibility 0s .45s}
+.sheet{position:fixed;left:0;right:0;top:var(--vt,0px);height:var(--vh,100dvh);z-index:50;overscroll-behavior:contain;display:flex;align-items:flex-end;justify-content:center;visibility:hidden;pointer-events:none;transition:visibility 0s .45s}
 .sheet.open{visibility:visible;pointer-events:auto;transition-delay:0s}
 .sheet .sc{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .3s}
 .sheet.open .sc{opacity:1}
-.sheet .pn{position:relative;width:min(100%,520px);max-height:min(78dvh,640px);display:flex;flex-direction:column;border-radius:28px 28px 0 0;background:var(--bg);border:1px solid var(--gb);box-shadow:0 -10px 40px rgba(0,0,0,.3);transform:translateY(100%);transition:transform .45s var(--spring);padding-bottom:env(safe-area-inset-bottom);outline:0}
+.sheet .pn{position:relative;width:min(100%,520px);max-height:min(calc(var(--vh,100dvh)*.78),640px);display:flex;flex-direction:column;border-radius:28px 28px 0 0;background:var(--bg);border:1px solid var(--gb);box-shadow:0 -10px 40px rgba(0,0,0,.3);transform:translateY(100%);transition:transform .45s var(--spring);padding-bottom:env(safe-area-inset-bottom);outline:0}
 .sheet.open .pn{transform:none}
-@media(min-width:600px){.sheet{align-items:center}.sheet .pn{border-radius:28px;max-height:min(70dvh,620px);transform:translateY(24px) scale(.97);opacity:0;transition:transform .45s var(--spring),opacity .25s}.sheet.open .pn{transform:none;opacity:1}}
+@media(min-width:600px){.sheet{align-items:center}.sheet .pn{border-radius:28px;max-height:min(calc(var(--vh,100dvh)*.7),620px);transform:translateY(24px) scale(.97);opacity:0;transition:transform .45s var(--spring),opacity .25s}.sheet.open .pn{transform:none;opacity:1}}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px}.ph b{font-size:18px;font-weight:700}
 .px{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(127,127,127,.18);color:inherit;border:0;cursor:pointer}
 .px svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
@@ -474,18 +474,34 @@ function list(q=''){
   if(!q&&l!==L){L=l;h+=`<div class="lh">${l}</div>`}
   h+=`<button type="button" class="ci${c.iso===cc.iso?' sel':''}" role="option" aria-selected="${c.iso===cc.iso}" data-i="${c.iso}"><i class="iso">${c.iso}</i><span class="nm">${esc(c.name)}</span><b>${dial(c)}</b></button>`}
  pl.innerHTML=h||'<p class="pe">No country found.</p>'}
+/* Kunci scroll halaman: overflow:hidden saja tidak cukup di iOS Safari. Body dibekukan di posisinya (position:fixed). */
+let lockY=0;
+function lockPage(v){
+ const b=document.body;
+ if(v){lockY=scrollY;b.style.cssText+=';position:fixed;top:-'+lockY+'px;left:0;right:0;width:100%;overflow:hidden'}
+ else{for(const k of ['position','top','left','right','width','overflow'])b.style[k]='';scrollTo(0,lockY)}}
+/* Sheet mengikuti area yang terlihat (di atas keyboard), jadi tidak melompat saat keyboard muncul */
+const vv=window.visualViewport;
+function fit(){if(!vv)return;sheet.style.setProperty('--vh',vv.height+'px');sheet.style.setProperty('--vt',vv.offsetTop+'px')}
+/* Sentuhan di luar daftar tidak boleh menggulir halaman; saat daftar digulir, keyboard ditutup */
+sheet.addEventListener('touchmove',e=>{
+ if(!pl.contains(e.target)||pl.scrollHeight<=pl.clientHeight){e.preventDefault();return}
+ if(document.activeElement===ps)ps.blur()},{passive:false});
 function openSheet(){
  ps.value='';list();
+ lockPage(true);fit();
+ if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit)}
  sheet.classList.add('open');
  for(const e of [$('header'),$('main')])e.inert=true;
- document.body.style.overflow='hidden';
  const s=pl.querySelector('.sel');if(s)pl.scrollTop=s.offsetTop-pl.clientHeight/2+s.offsetHeight/2;
  (matchMedia('(pointer:fine)').matches?ps:pn).focus({preventScroll:true})}
 function closeSheet(){
  if(!sheet.classList.contains('open'))return;
  sheet.classList.remove('open');
  for(const e of [$('header'),$('main')])e.inert=false;
- document.body.style.overflow='';
+ if(vv){vv.removeEventListener('resize',fit);vv.removeEventListener('scroll',fit)}
+ sheet.style.removeProperty('--vh');sheet.style.removeProperty('--vt');
+ lockPage(false);
  const b=$('#cc');if(b)b.focus({preventScroll:true})}
 function pick(iso){
  const c=CC.find(x=>x.iso===iso);if(!c)return;
