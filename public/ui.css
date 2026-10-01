@@ -64,3 +64,17 @@ a.card:hover .chip{translate:3px 0}
  #out:has(.pv)>:not(.pv){grid-column:2}
  .empty,.rch,.rc{max-width:720px;margin-inline:auto}
 }
+
+/* Tahan = tombol "tertahan"; tahan lama = "siap" (lepas = jalan); tap = konfirmasi;
+   geser/scroll atau jari keluar = batal lembut tanpa konfirmasi. */
+button:active{transform:none}.mb:active{scale:none}
+.holding,.tapped,.cancel,#out.anim .fmt.holding,#out.anim .fmt.tapped,#out.anim .fmt.cancel{animation:var(--pa)}
+.holding{--pa:hold .18s var(--e) forwards}
+.holding.armed{--pa:arm .38s var(--spring) forwards}
+.tapped{--pa:tapb .45s var(--spring)}
+.cancel{--pa:rel .4s var(--e)}
+@keyframes hold{to{scale:.965;opacity:.88}}
+@keyframes arm{from{scale:.965;opacity:.88}to{scale:.94;opacity:.76}}
+@keyframes tapb{from{scale:.94;opacity:.8}50%{scale:1.035;opacity:1}to{scale:1}}
+@keyframes rel{from{scale:.95;opacity:.8}to{scale:1;opacity:1}}
+@media(prefers-reduced-motion:reduce){.holding{opacity:.75}}

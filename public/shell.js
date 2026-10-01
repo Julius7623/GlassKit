@@ -46,3 +46,17 @@ function themeInit(){
 const go=()=>{mount();themeInit();const c=$('#cards');if(c)GlassKit.cards(c);const q=$('#qr');if(q)new MutationObserver(()=>{q.classList.remove('pop');void q.offsetWidth;q.classList.add('pop')}).observe(q,{childList:true})};
 D.readyState==='loading'?D.addEventListener('DOMContentLoaded',go):go();
 })();
+
+(()=>{ // tahan / tap / scroll: bedakan niat pengguna
+const D=document,SEL='button,a.card,a.di,.rc';let el=null,x0=0,y0=0,t1,t2;
+const end=c=>{if(!el)return;clearTimeout(t1);clearTimeout(t2);const e=el;el=null;e.classList.remove('holding','armed');
+ if(c){void e.offsetWidth;e.classList.add(c);setTimeout(()=>e.classList.remove(c),500)}};
+D.addEventListener('pointerdown',ev=>{end();if(ev.button>0)return;const b=ev.target.closest(SEL);
+ if(!b||b.disabled||b.closest('.sw,.seg'))return;el=b;x0=ev.clientX;y0=ev.clientY;
+ t1=setTimeout(()=>el&&el.classList.add('holding'),60);t2=setTimeout(()=>el&&el.classList.add('armed'),450)});
+D.addEventListener('pointermove',ev=>{if(!el)return;
+ if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>10||(ev.pointerType==='mouse'&&!el.contains(ev.target)))end('cancel')});
+D.addEventListener('pointerup',ev=>{if(el)end(el.contains(ev.target)?'tapped':'cancel')});
+['pointercancel','contextmenu','blur'].forEach(n=>addEventListener(n,()=>end('cancel')));
+D.addEventListener('scroll',()=>end('cancel'),true);
+})();
