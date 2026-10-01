@@ -78,3 +78,22 @@ button:active{transform:none}.mb:active{scale:none}
 @keyframes tapb{from{scale:.94;opacity:.8}50%{scale:1.035;opacity:1}to{scale:1}}
 @keyframes rel{from{scale:.95;opacity:.8}to{scale:1;opacity:1}}
 @media(prefers-reduced-motion:reduce){.holding{opacity:.75}}
+
+/* Desktop (mouse): hover = "bisa diklik", tekan/tahan memakai efek yang sama dengan mobile */
+.btn{transition:transform .4s var(--sp),opacity .25s,translate .2s var(--e),box-shadow .2s}
+.ghost{transition:max-width .4s var(--e),padding .4s var(--e),margin .4s var(--e),opacity .25s,transform .4s var(--sp),translate .2s var(--e),box-shadow .2s}
+.mb,.dh .x,.px,.rc,.ci,.cc,.rch button{transition:background-color .2s,box-shadow .2s,opacity .25s,border-color .2s}
+.fmt{transition:transform .4s var(--sp),opacity .25s,box-shadow .25s}
+.card{transition:transform .4s var(--sp),box-shadow .3s}
+.ico{transition:scale .3s var(--spring)}
+@media(hover:hover) and (pointer:fine){
+ button:not(:disabled),a.card,a.di,.rc{cursor:pointer}
+ button:disabled{cursor:not-allowed}
+ .btn:hover{translate:0 -1px;box-shadow:0 8px 18px var(--shc)}
+ .ghost:hover,.mb:hover,.dh .x:hover,.px:hover,.rc:hover,.ci:hover,.cc:hover{box-shadow:inset 0 0 0 999px rgba(127,127,127,.14)}
+ .rch button:hover{opacity:.7}
+ .clr:hover::before{background:rgba(127,127,127,.38)}
+ .fmt:hover{box-shadow:inset 0 1px 0 var(--hl),0 10px 24px var(--shc)}
+ a.card:hover{box-shadow:0 16px 40px var(--shc),inset 0 1.5px 0 var(--hl)}
+ a.card:hover .ico,a.di:hover .ico{scale:1.08}
+}
