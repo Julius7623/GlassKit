@@ -36,9 +36,9 @@ function themeInit(){
  const sync=()=>{tsw.classList.toggle('on',dark());tsw.setAttribute('aria-checked',dark());$('meta[name=theme-color]').content=dark()?'#0a0a0a':'#f5f5f5'};
  const set=v=>{R.dataset.theme=v?'dark':'light';st(R.dataset.theme);sync()};
  let id=null,x0=0,p0=0,trv=0,mv=false;
- tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;tsw.classList.add('press')});
+ tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;clearTimeout(tsw._t);tsw.classList.add('press')});
  tsw.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;tsw.classList.add('drag');tsw.style.setProperty('--x',Math.max(0,Math.min(trv,p0+dx))+'px')});
- const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=dark();if(ok)v=mv?parseFloat(tsw.style.getPropertyValue('--x'))>trv/2:!v;tsw.classList.remove('press','drag');tsw.style.removeProperty('--x');if(v!==dark())set(v)};
+ const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=dark();if(ok)v=mv?parseFloat(tsw.style.getPropertyValue('--x'))>trv/2:!v;tsw.classList.remove('drag');tsw.style.removeProperty('--x');clearTimeout(tsw._t);if(v!==dark()){tsw._t=setTimeout(()=>tsw.classList.remove('press'),180);set(v)}else tsw.classList.remove('press')};
  tsw.addEventListener('pointerup',e=>end(e,true));tsw.addEventListener('pointercancel',e=>end(e,false));
  tsw.addEventListener('click',e=>{if(e.detail===0)set(!dark())});
  sync();requestAnimationFrame(()=>requestAnimationFrame(()=>R.classList.add('ready')));

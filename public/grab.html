@@ -77,11 +77,11 @@ function theme(v){
 }
 function sw(el,get,set){
   let id=null,x0=0,p0=0,trv=0,mv=false;
-  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);x0=e.clientX;trv=el.offsetWidth-44;p0=get()?trv:0;mv=false;el.classList.add('press')});
+  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);x0=e.clientX;trv=el.offsetWidth-44;p0=get()?trv:0;mv=false;clearTimeout(el._t);el.classList.add('press')});
   el.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;el.classList.add('drag');el.style.setProperty('--x',Math.max(0,Math.min(trv,p0+dx))+'px')});
   const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=get();
     if(ok)v=mv?parseFloat(el.style.getPropertyValue('--x'))>trv/2:!v;
-    el.classList.remove('press','drag');el.style.removeProperty('--x');if(v!==get())set(v)};
+    el.classList.remove('drag');el.style.removeProperty('--x');clearTimeout(el._t);if(v!==get()){el._t=setTimeout(()=>el.classList.remove('press'),180);set(v)}else el.classList.remove('press')};
   el.addEventListener('pointerup',e=>end(e,true));el.addEventListener('pointercancel',e=>end(e,false));
   el.addEventListener('click',e=>{if(e.detail===0)set(!get())});
 }
