@@ -24,6 +24,7 @@ function mount(){
  dr.innerHTML='<div class="dh"><b>GlassKit</b><button class="x" aria-label="Close menu"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
   +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b> &middot; <a class="lk" href="/legal">Privacy &amp; Terms</a></p>';
  D.body.append(sc,dr);
+ const mq=matchMedia('(min-width:1280px)'),side=()=>{if(mq.matches)D.body.classList.remove('menu');dr.inert=mq.matches?false:!D.body.classList.contains('menu')};mq.addEventListener('change',side);side();
  const set=v=>{D.body.classList.toggle('menu',v);mb.setAttribute('aria-expanded',v);dr.inert=!v;(v?dr.querySelector('.x'):mb).focus({preventScroll:true})};
  mb.onclick=()=>{set(true)};sc.onclick=()=>{set(false)};dr.querySelector('.x').onclick=()=>{set(false)};
  dr.onclick=e=>{if(e.target.closest('a'))set(false)};
@@ -42,6 +43,6 @@ function themeInit(){
  tsw.addEventListener('click',e=>{if(e.detail===0)set(!dark())});
  sync();requestAnimationFrame(()=>requestAnimationFrame(()=>R.classList.add('ready')));
 }
-const go=()=>{mount();themeInit();const c=$('#cards');if(c)GlassKit.cards(c)};
+const go=()=>{mount();themeInit();const c=$('#cards');if(c)GlassKit.cards(c);const q=$('#qr');if(q)new MutationObserver(()=>{q.classList.remove('pop');void q.offsetWidth;q.classList.add('pop')}).observe(q,{childList:true})};
 D.readyState==='loading'?D.addEventListener('DOMContentLoaded',go):go();
 })();

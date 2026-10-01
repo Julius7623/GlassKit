@@ -17,8 +17,9 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="/base.css?v=2">
-<script src="/shell.js?v=2" defer></script>
+<link rel="stylesheet" href="/base.css?v=3">
+<link rel="stylesheet" href="/ui.css?v=1">
+<script src="/shell.js?v=3" defer></script>
 
 </head>
 <body data-own-theme>
@@ -32,6 +33,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <main>
   <h1 data-i="h1"></h1>
   <p class="sub" data-i="sub"></p>
+  <ol class="steps" id="st" aria-label="Steps"><li><i>1</i><span>Paste link</span></li><li><i>2</i><span>Pick format</span></li><li><i>3</i><span>Download</span></li></ol>
   <div class="glass bar">
     <input id="u" type="url" enterkeyhint="go" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" aria-label="URL" autocomplete="off">
     <button class="clr hide" id="x" type="button" aria-label="Clear link"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -96,7 +98,8 @@ const RK='recent',recents=()=>{try{return JSON.parse(store(RK)||'[]')}catch(e){r
 function remember(url,title){const l=recents().filter(x=>x.u!==url);l.unshift({u:url,t:title||url});store(RK,JSON.stringify(l.slice(0,4)))}
 function emptyHTML(){const l=recents();
   return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(s||'Link')}</small></span></button>`}).join(''):'')}
-const put=h=>{out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim')};
+const stp=n=>[...$('#st').children].forEach((l,i)=>l.className=i+1<n?'done':i+1===n?'on':'');
+const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim')};
 const ER=[
 [/YouTube memblokir/,{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1}],
 [/Link tidak valid|Hanya link/,{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'}],
@@ -119,7 +122,7 @@ const fail=e=>{lastErr=e;const x=explain(e);
   const r=$('#rt');if(r)r.onclick=()=>load();$('#cl').onclick=()=>xb.click()};
 let slowT;
 function loading(){
-  put(`<div class="glass sk"><div class="spin"></div><b>${t('look')}</b><small id="lw">${t('wait')}</small></div>`);
+  put(`<div class="glass pv skl"><div class="th"></div><div class="info"><i></i><i></i><i class="s"></i></div></div><div class="glass sk"><div class="spin"></div><b>${t('look')}</b><small id="lw">${t('wait')}</small></div>`);
   clearTimeout(slowT);slowT=setTimeout(()=>{const e=$('#lw');if(e)e.textContent=t('slow')},7000);
   lock(true);
 }
@@ -171,7 +174,7 @@ out.onclick=async ev=>{
     const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}`),d=await r.json();
     if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});
     const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
-    say(t('started')+MB(d.size,true));
+    stp(3);say(t('started')+MB(d.size,true));
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
   finally{clearInterval(tick);delete out.dataset.busy;b.classList.remove('busy');b.innerHTML=old;b.disabled=false}
 };

@@ -17,8 +17,9 @@
 try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
-<link rel="stylesheet" href="/base.css?v=2">
-<script src="/shell.js?v=2" defer></script>
+<link rel="stylesheet" href="/base.css?v=3">
+<link rel="stylesheet" href="/ui.css?v=1">
+<script src="/shell.js?v=3" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}

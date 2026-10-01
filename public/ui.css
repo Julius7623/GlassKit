@@ -1,0 +1,66 @@
+/* GlassKit UI layer (loads after base.css, same on every page).
+   Arti gerak: spring = benda fisik bergeser/ditekan · fade = status berubah ·
+   stagger = hasil datang satu per satu · bar geser = menunggu, durasi tak pasti ·
+   pop = hasil dibuat ulang · garis langkah terisi = kemajuan alur. */
+:root{--ring:0 0 0 3px color-mix(in srgb,var(--ac) 16%,transparent)}
+
+/* Kolom input: tanda jelas bahwa ia aktif */
+.bar{transition:box-shadow .25s var(--e)}
+.bar:focus-within{box-shadow:var(--sh),var(--ring)}
+
+/* Langkah GlassGrab: 1 tempel, 2 pilih, 3 unduh */
+.steps{list-style:none;display:flex;align-items:center;justify-content:center;padding:0;margin:0 auto var(--s5);max-width:440px}
+.steps li{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--t2);white-space:nowrap;transition:color .3s var(--e)}
+.steps li+li{flex:1;min-width:20px}
+.steps li+li::before{content:"";flex:1;height:2px;margin-right:8px;border-radius:2px;background:linear-gradient(var(--ac),var(--ac)) left/0 100% no-repeat,rgba(127,127,127,.25);transition:background-size .5s var(--e)}
+.steps i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--mono);font-style:normal;background:rgba(127,127,127,.2);transition:background-color .3s,color .3s,scale .45s var(--spring)}
+.steps .on,.steps .done{color:var(--t)}
+.steps .on i,.steps .done i{background:var(--ac);color:var(--act)}
+.steps .on i{scale:1.12}
+.steps .done i{font-size:0}.steps .done i::before{content:"\2713";font-size:13px}
+.steps .on::before,.steps .done::before{background-size:100% 100%}
+
+/* Kerangka pemuatan berbentuk hasil akhir: pengguna tahu apa yang akan muncul */
+.skl .th,.skl .info i{background-color:rgba(127,127,127,.18);background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);background-size:250% 100%;animation:shim 1.4s linear infinite}
+.skl .info{flex:1;justify-content:center;gap:10px}
+.skl .info i{display:block;height:14px;border-radius:7px;width:90%}.skl .info i.s{width:50%}
+@keyframes shim{from{background-position:150% 0}to{background-position:-50% 0}}
+
+/* QR dibuat ulang: denyut singkat */
+@keyframes pop{from{scale:.94;opacity:.55}}
+.qrc.pop{animation:pop .45s var(--spring)}
+
+/* Gerak yang menandai "bisa diklik" hanya untuk perangkat dengan hover */
+.chip{transition:translate .3s var(--spring)}
+a.card:hover .chip{translate:3px 0}
+.cards{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+@media(hover:none){.fmt:hover,a.card:hover{transform:none}}
+
+/* Mobile: Paste tetap terlihat, tombol di baris sendiri agar mudah dijangkau jempol */
+@media(max-width:520px){
+ .bar{flex-wrap:wrap}
+ .bar input{flex:1 1 100%;padding-right:100px}
+ .bar .clr{position:absolute;top:10px;right:8px}
+ .bar .pill{position:absolute;top:14px;right:52px}
+ .bar .ghost,.bar .btn{display:block;order:5}
+ .bar .btn,.bar .ghost:not(.hide){flex:1 1 0;max-width:none}
+ .grid{grid-template-columns:1fr}
+ .steps li:not(.on) span{display:none}
+}
+
+/* Desktop: menu jadi sidebar tetap, konten lebih lega, hasil unduhan dua kolom */
+@media(min-width:1280px){
+ body{padding-left:372px}
+ .mb,.scrim{display:none}
+ .drawer{visibility:visible!important;transform:none!important;transition:none;width:340px;background:var(--g);-webkit-backdrop-filter:blur(34px) saturate(180%);backdrop-filter:blur(34px) saturate(180%)}
+ .dh .x{display:none}
+ header{justify-content:flex-end}
+ main,header{max-width:1040px}
+ main:has(.doc){max-width:760px}
+ .bar{max-width:720px;margin-inline:auto}
+ #out:has(.pv){display:grid;grid-template-columns:288px minmax(0,1fr);column-gap:var(--s5);align-items:start}
+ #out:has(.pv)>.pv{grid-column:1;grid-row:1/span 8;position:sticky;top:var(--s5);flex-direction:column}
+ #out:has(.pv)>.pv .th{width:100%}
+ #out:has(.pv)>:not(.pv){grid-column:2}
+ .empty,.rch,.rc{max-width:720px;margin-inline:auto}
+}
