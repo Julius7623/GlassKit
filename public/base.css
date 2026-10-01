@@ -149,3 +149,44 @@ html.ready{transition:--bg .55s cubic-bezier(.4,0,.2,1),--t .55s cubic-bezier(.4
 .sw.press .kn::before{opacity:0}.sw.press .kn::after{opacity:1}
 .sw.drag .kn{transition:scale .5s var(--spring),color .3s}
 .mb:active{scale:.94}
+
+/* ===== Apple HIG pass: radius, spacing (4/8pt), type scale, 44pt targets ===== */
+:root{--r-xl:32px;--r-l:28px;--r-m:20px;--r-s:16px;--r-full:999px;--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px}
+body{font-size:17px}
+h1{font-size:clamp(32px,8.5vw,48px);font-weight:700;letter-spacing:-.03em;line-height:1.1;margin:var(--s5) 0 var(--s3)}
+.sub{font-size:17px;line-height:1.35;margin-bottom:var(--s5)}
+header{padding-top:var(--s2);gap:var(--s3)}
+.glass{border-radius:var(--r-l)}
+.bar{min-height:64px;padding:var(--s2);border-radius:var(--r-xl)}
+.bar input{height:48px;padding:0 var(--s2) 0 var(--s4);font-size:17px}
+.btn,.ghost{height:48px;border-radius:calc(var(--r-xl) - var(--s2));font-size:17px;font-weight:600}
+.btn{padding:0 var(--s5)}.ghost{padding:0 var(--s4)}
+.mb{width:44px;height:44px}
+.sw{height:40px;border-radius:var(--r-full)}
+.sw::before{content:"";position:absolute;inset:-4px}
+.kn{top:5px;left:4px;height:30px}
+.pill{width:36px;height:36px;max-width:36px}
+.clr{position:relative;width:44px;height:44px;max-width:44px;background:none;overflow:visible}
+.clr::before{content:"";position:absolute;width:30px;height:30px;border-radius:50%;background:rgba(127,127,127,.22)}
+.clr svg{position:relative}
+.clr.hide{max-width:0;margin-left:-8px;overflow:hidden}
+.pv{padding:var(--s3);gap:var(--s4);margin-top:var(--s4)}
+.th{border-radius:calc(var(--r-l) - var(--s3))}
+.info b{font-size:17px;font-weight:600}
+.sh{margin:var(--s5) var(--s2) var(--s3)}
+.sh h2{font-size:20px;font-weight:600;letter-spacing:-.01em}.sh span{font-size:15px}
+.grid{gap:var(--s3)}
+.fmt{border-radius:var(--r-m);padding:var(--s4);min-height:44px}
+.sk{margin-top:var(--s4);padding:var(--s6) var(--s5);gap:var(--s3)}
+.foot{margin-top:var(--s6)}
+.card{border-radius:var(--r-l);padding:20px}
+.ico{border-radius:22.37%}
+.drawer{top:max(8px,env(safe-area-inset-top));bottom:max(8px,env(safe-area-inset-bottom));left:8px;width:min(340px,calc(100vw - 56px));padding:var(--s4);border-radius:var(--r-xl);border:1px solid var(--gb);transform:translateX(-112%)}
+body.menu .drawer{transform:none}
+.dh{padding:0 var(--s1) var(--s3)}
+.dh .x{width:44px;height:44px}
+.di{border-radius:var(--r-s);min-height:56px}
+.dc{padding:var(--s4) var(--s2) 0}
+.chip,.tag{font-size:11px}
+#t{padding:14px var(--s5)}
+.drawer{background:color-mix(in srgb,var(--bg) 82%,transparent)}
