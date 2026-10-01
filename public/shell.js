@@ -47,24 +47,29 @@ const go=()=>{mount();themeInit();const c=$('#cards');if(c)GlassKit.cards(c);con
 D.readyState==='loading'?D.addEventListener('DOMContentLoaded',go):go();
 })();
 
-(()=>{ // tahan / tap / scroll: efek tekan hanya muncul kalau jari benar-benar diam
-const D=document,SEL='button,a.card,a.di,.rc';let el=null,x0=0,y0=0,t1,t2,quiet=0,ls=0,touch=0;
+(()=>{ // tahan / tap / scroll / keyboard. Pakai Web Animations supaya animasi masuk (CSS) tidak ikut terulang
+const D=document,SEL='button,a.card,a.di,.rc',RM=matchMedia('(prefers-reduced-motion:reduce)'),E='cubic-bezier(.4,0,.2,1)',S='cubic-bezier(.34,1.56,.64,1)';
+let el=null,x0=0,y0=0,t1,t2,quiet=0,ls=0,touch=0;const A=new WeakMap();
+const go=(e,k,o)=>{if(RM.matches)return;const a=e.animate(k,o);A.set(e,[...(A.get(e)||[]),a])};
+const swap=(e,k,o)=>{const old=A.get(e)||[];A.delete(e);if(k)go(e,k,o);old.forEach(a=>a.cancel())};
+const hold=e=>{e.classList.add('holding');go(e,[{scale:1,opacity:1},{scale:.965,opacity:.88}],{duration:180,easing:E,fill:'forwards'})};
+const arm=e=>{e.classList.add('armed');go(e,[{scale:.965,opacity:.88},{scale:.94,opacity:.76}],{duration:380,easing:S,fill:'forwards'})};
+const TAP=[{scale:.94,opacity:.8},{scale:1.035,opacity:1,offset:.5},{scale:1,opacity:1}];
 const end=c=>{if(!el)return;clearTimeout(t1);clearTimeout(t2);const e=el,seen=e.classList.contains('holding'),q=quiet;el=null;e.classList.remove('holding','armed');
- if(c==='cancel'&&!seen||q&&c==='tapped')return; // belum terlihat atau sentuhan untuk menghentikan scroll: tanpa animasi
- if(c){void e.offsetWidth;e.classList.add(c);setTimeout(()=>e.classList.remove(c),500)}};
+ if(c==='cancel'&&!seen||q&&c==='tapped')return swap(e);
+ if(c==='tapped')swap(e,TAP,{duration:450,easing:S});
+ else swap(e,[{scale:.95,opacity:.8},{scale:1,opacity:1}],{duration:400,easing:E})};
 D.addEventListener('scroll',()=>{ls=Date.now();end('cancel')},true);
 D.addEventListener('pointerdown',ev=>{end();if(ev.button>0)return;const b=ev.target.closest(SEL);
- if(!b||b.disabled||b.closest('.sw,.seg'))return;el=b;x0=ev.clientX;y0=ev.clientY;touch=ev.pointerType!=='mouse';
+ if(!b||b.disabled||b.getAttribute('aria-disabled')==='true'||b.closest('.sw,.seg'))return;el=b;x0=ev.clientX;y0=ev.clientY;touch=ev.pointerType!=='mouse';
  quiet=Date.now()-ls<250?1:0; // layar masih bergulir: sentuhan ini hanya menghentikan scroll
  if(quiet)return;
- t1=setTimeout(()=>el&&el.classList.add('holding'),touch?130:40);t2=setTimeout(()=>el&&el.classList.add('armed'),touch?600:450)});
+ t1=setTimeout(()=>el&&hold(el),touch?130:40);t2=setTimeout(()=>el&&arm(el),touch?600:450)});
 D.addEventListener('pointermove',ev=>{if(!el)return;
  if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>(touch?6:10)||(!touch&&!el.contains(ev.target)))end('cancel')});
 D.addEventListener('pointerup',ev=>{if(el)end(el.contains(ev.target)?'tapped':'cancel')});
 ['pointercancel','contextmenu','blur'].forEach(n=>addEventListener(n,()=>end('cancel')));
-})();
-(()=>{ // keyboard: Enter/Space memberi efek tekan yang sama
-const D=document,SEL='button,a.card,a.di,.rc',pick=ev=>{const b=ev.target.closest&&ev.target.closest(SEL);return b&&!b.disabled&&!b.closest('.sw,.seg')?b:null};
-D.addEventListener('keydown',ev=>{if(ev.repeat||ev.key!=='Enter'&&ev.key!==' ')return;const b=pick(ev);if(b)b.classList.add('holding')});
-D.addEventListener('keyup',ev=>{const b=pick(ev);if(b&&b.classList.contains('holding')){b.classList.remove('holding','armed');void b.offsetWidth;b.classList.add('tapped');setTimeout(()=>b.classList.remove('tapped'),500)}});
+const pick=ev=>{const b=ev.target.closest&&ev.target.closest(SEL);return b&&!b.disabled&&b.getAttribute('aria-disabled')!=='true'&&!b.closest('.sw,.seg')?b:null};
+D.addEventListener('keydown',ev=>{if(ev.repeat||ev.key!=='Enter'&&ev.key!==' ')return;const b=pick(ev);if(b)hold(b)});
+D.addEventListener('keyup',ev=>{const b=pick(ev);if(b&&b.classList.contains('holding')&&!el){b.classList.remove('holding','armed');swap(b,TAP,{duration:450,easing:S})}});
 })();

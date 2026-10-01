@@ -17,9 +17,9 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="/base.css?v=3">
-<link rel="stylesheet" href="/ui.css?v=3">
-<script src="/shell.js?v=6" defer></script>
+<link rel="stylesheet" href="/base.css?v=4">
+<link rel="stylesheet" href="/ui.css?v=5">
+<script src="/shell.js?v=8" defer></script>
 
 </head>
 <body data-own-theme>
@@ -47,7 +47,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </main>
 <div class="glass" id="t" role="status" aria-live="polite"></div>
 <script>
-const L={en:{doc:'GlassGrab - Download videos from any link',h1:'Download videos from any link',sub:'Works with YouTube, Instagram, TikTok, Facebook, X, and thousands of other sites. No ads. No sign-up.',ph:'Paste a video link here',paste:'Paste',go:'Search',empty:'Paste a link, then choose a format.',foot:'For content you own, have a license for, or personal use only. Links and files are never saved.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added for you',ao:'Audio only',aoh:'Sound without the video',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'size unknown',prep:'Preparing file...',started:'Download started: ',clip:'Allow clipboard access, or paste the link manually',look:'Looking up the video...',wait:'Getting video details and available formats. This usually takes a few seconds.',slow:'Still working. The server may take a little longer to start, please wait.'}};
+const L={en:{doc:'GlassGrab - Download videos from any link',h1:'Download videos from any link',sub:'Works with YouTube, Instagram, TikTok, Facebook, X, and thousands of other sites. No ads. No sign-up.',ph:'Paste a video link here',paste:'Paste',go:'Search',empty:'Paste a link, then choose a format.',foot:'For content you own, have a license for, or personal use only. Links and files are never saved.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added for you',ao:'Audio only',aoh:'Sound without the video',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'size unknown',prep:'Preparing file...',started:'Download started: ',clip:'Allow clipboard access, or paste the link manually',look:'Looking up the video...',wait:'Getting video details and available formats. This usually takes a few seconds.',wait2:'Please wait until the current file is ready.',slow:'Still working. The server may take a little longer to start, please wait.'}};
 const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const lang='en';let cur=null,lastErr=null;
@@ -99,7 +99,7 @@ function remember(url,title){const l=recents().filter(x=>x.u!==url);l.unshift({u
 function emptyHTML(){const l=recents();
   return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(s||'Link')}</small></span></button>`}).join(''):'')}
 const stp=n=>[...$('#st').children].forEach((l,i)=>l.className=i+1<n?'done':i+1===n?'on':'');
-const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim')};
+const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim');clearTimeout(put.t);put.t=setTimeout(()=>out.classList.remove('anim'),1300)}; // animasi masuk cukup sekali; lepas kelasnya supaya tidak terulang saat tombol ditekan
 const ER=[
 [/YouTube memblokir/,{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1}],
 [/Link tidak valid|Hanya link/,{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'}],
@@ -166,8 +166,12 @@ out.onclick=async ev=>{
   const rc=ev.target.closest('.rc');
   if(rc){u.value=rc.dataset.u;u.oninput();return load()}
   if(ev.target.closest('.rcx')){store('recent','[]');return put(emptyHTML())}
-  const b=ev.target.closest('.fmt');if(!b||out.dataset.busy)return;
+  const b=ev.target.closest('.fmt');
+  if(out.dataset.busy){if(b&&b.getAttribute('aria-disabled')==='true')say(t('wait2'));return}
+  if(!b)return;
   out.dataset.busy=1;
+  // semua opsi lain diredupkan + kolom link dikunci: jelas bahwa sekarang harus menunggu
+  out.querySelectorAll('.fmt').forEach(x=>{if(x!==b)x.setAttribute('aria-disabled','true')});lock(true);
   const {f,k,e}=b.dataset,old=b.innerHTML,t0=Date.now();
   b.disabled=true;b.classList.add('busy');
   b.innerHTML=`<b>${t('prep')}<em class="el">0:00</em></b><span class="pgb"><i></i></span><span class="hint">Keep this page open.</span>`;
@@ -178,7 +182,7 @@ out.onclick=async ev=>{
     const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
     stp(3);say(t('started')+MB(d.size,true));
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
-  finally{clearInterval(tick);delete out.dataset.busy;b.classList.remove('busy');b.innerHTML=old;b.disabled=false}
+  finally{clearInterval(tick);delete out.dataset.busy;out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');b.innerHTML=old;b.disabled=false}
 };
 
 

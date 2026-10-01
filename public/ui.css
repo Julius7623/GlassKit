@@ -68,15 +68,6 @@ a.card:hover .chip{translate:3px 0}
 /* Tahan = tombol "tertahan"; tahan lama = "siap" (lepas = jalan); tap = konfirmasi;
    geser/scroll atau jari keluar = batal lembut tanpa konfirmasi. */
 button:active{transform:none}.mb:active{scale:none}
-.holding,.tapped,.cancel,#out.anim .fmt.holding,#out.anim .fmt.tapped,#out.anim .fmt.cancel{animation:var(--pa)}
-.holding{--pa:hold .18s var(--e) forwards}
-.holding.armed{--pa:arm .38s var(--spring) forwards}
-.tapped{--pa:tapb .45s var(--spring)}
-.cancel{--pa:rel .4s var(--e)}
-@keyframes hold{to{scale:.965;opacity:.88}}
-@keyframes arm{from{scale:.965;opacity:.88}to{scale:.94;opacity:.76}}
-@keyframes tapb{from{scale:.94;opacity:.8}50%{scale:1.035;opacity:1}to{scale:1}}
-@keyframes rel{from{scale:.95;opacity:.8}to{scale:1;opacity:1}}
 @media(prefers-reduced-motion:reduce){.holding{opacity:.75}}
 
 /* Desktop (mouse): hover = "bisa diklik", tekan/tahan memakai efek yang sama dengan mobile */
@@ -97,3 +88,9 @@ button:active{transform:none}.mb:active{scale:none}
  a.card:hover{box-shadow:0 16px 40px var(--shc),inset 0 1.5px 0 var(--hl)}
  a.card:hover .ico,a.di:hover .ico{scale:1.08}
 }
+
+/* Saat file sedang disiapkan: opsi lain diredupkan dan abu-abu = "tidak bisa ditekan sekarang".
+   Hanya kartu yang diproses yang tetap terang dan bergerak (bar geser). */
+.fmt{transition:transform .4s var(--sp),opacity .3s,filter .3s,box-shadow .25s}
+.fmt[aria-disabled=true]{opacity:.38;filter:grayscale(1);cursor:not-allowed;transform:none}
+.fmt[aria-disabled=true]:hover{transform:none;box-shadow:inset 0 1px 0 var(--hl)}
