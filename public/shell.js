@@ -11,10 +11,7 @@ txt:'<path d="M5 6h14M12 6v13M9 19h6"/>'};
 const TOOLS=[
 {n:'GlassGrab',p:'/grab',d:'Download videos from any link',i:'dl',live:1},
 {n:'GlassPDF',p:'/pdf',d:'Merge, split, and compress PDF files',i:'pdf'},
-{n:'GlassPix',p:'/pix',d:'Compress, resize, and convert images',i:'img'},
-{n:'GlassClip',p:'/clip',d:'Trim, compress, and convert video',i:'vid'},
-{n:'GlassQR',p:'/qr',d:'Create QR codes for links, WiFi, and more',i:'qr'},
-{n:'GlassText',p:'/text',d:'Extract text from images and count words',i:'txt'}];
+{n:'GlassQR',p:'/qr',d:'Create QR codes for links, WiFi, and more',i:'qr'},];
 const ico=k=>`<span class="ico"><svg viewBox="0 0 24 24">${P[k]}</svg></span>`;
 window.GlassKit={TOOLS,ico,cards(el){el.innerHTML=TOOLS.map((t,i)=>{const tag=t.live?'a':'div',h=t.live?` href="${t.p}"`:'';
  return `<${tag} class="glass card ${t.live?'live':'soon'}"${h} style="--n:${i}">${ico(t.i)}<b>${t.n}</b><p>${t.d}</p><span class="chip">${t.live?'Open':'Coming soon'}</span></${tag}>`}).join('')}};

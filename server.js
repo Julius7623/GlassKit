@@ -61,16 +61,18 @@ app.get('/api/info', async req => {
     if (!x.format_id || x.ext === 'mhtml' || (x.vcodec === 'none' && x.acodec === 'none')) continue;
     const hasV = x.vcodec && x.vcodec !== 'none', hasA = x.acodec && x.acodec !== 'none';
     const k = hasV && hasA ? 'av' : hasV ? 'v' : 'a';
-    const size = Math.round(x.filesize || x.filesize_approx || (x.tbr && dur ? x.tbr * 125 * dur : 0));
+    // filesize asli bila ada; filesize_approx dari yt-dlp sering melenceng (HLS), jadi pakai bitrate x durasi
+    const ex = !!x.filesize;
+    const size = Math.round(x.filesize || (x.tbr && dur ? x.tbr * 125 * dur : x.filesize_approx || 0));
     const f = { id: x.format_id, k, ext: x.ext, h: x.height || 0, fps: x.fps || 0, vc: short(x.vcodec), ac: short(x.acodec),
-      br: Math.round(x.tbr || x.abr || 0), size, hdr: !!x.dynamic_range && x.dynamic_range !== 'SDR' };
+      br: Math.round(x.tbr || x.abr || 0), size, ex, hdr: !!x.dynamic_range && x.dynamic_range !== 'SDR' };
     const key = [k, f.h, f.fps, f.ext, f.vc, f.ac, f.hdr].join('|');
     if (!map.has(key) || map.get(key).br < f.br) map.set(key, f);
   }
   const formats = [...map.values()];
-  const aSize = Math.max(0, ...formats.filter(f => f.k === 'a').sort((a, b) => b.br - a.br).slice(0, 1).map(f => f.size));
-  formats.forEach(f => { if (f.k === 'v' && f.size) f.size += aSize; });
-  if (dur) formats.push({ id: 'mp3', k: 'a', ext: 'mp3', h: 0, fps: 0, vc: null, ac: 'MP3', br: 192, size: dur * 24000, hdr: false });
+  const bestA = formats.filter(f => f.k === 'a').sort((a, b) => b.br - a.br)[0];
+  if (bestA) formats.forEach(f => { if (f.k === 'v' && f.size) { f.size += bestA.size; f.ex = f.ex && bestA.ex; } });
+  if (dur) formats.push({ id: 'mp3', k: 'a', ext: 'mp3', h: 0, fps: 0, vc: null, ac: 'MP3', br: 192, size: dur * 24000, ex: false, hdr: false });
   return { title: j.title, thumb: j.thumbnail, dur, who: j.uploader || j.channel || '', formats };
 });
 
