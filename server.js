@@ -13,7 +13,8 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const app = Fastify({ logger: false, trustProxy: true }); // logger off: URL tidak pernah dicatat
-await app.register(rateLimit, { max: 20, timeWindow: '1 minute' });
+await app.register(rateLimit, { global: false, errorResponseBuilder: (_q, c) => ({ statusCode: 429, error: 'Too Many Requests', message: `Terlalu banyak permintaan, coba lagi dalam ${Math.ceil(c.ttl / 1000)} detik` }) }); // hanya /api/* yang dibatasi; halaman & aset statis tidak
+const RL = max => ({ config: { rateLimit: { max, timeWindow: '1 minute' } } });
 const PUB = fileURLToPath(new URL('./public', import.meta.url));
 await app.register(fastifyStatic, {
   root: PUB, extensions: ['html'], index: false,
@@ -108,7 +109,7 @@ async function tryClients(url, fn) {
   throw last;
 }
 
-app.get('/api/info', async req => {
+app.get('/api/info', RL(40), async req => {
   const url = await safeUrl(req.query.url);
   const j = JSON.parse(await tryClients(url, ex => run([...ex, '-J', url], 40000)));
   const dur = j.duration || 0;
@@ -137,7 +138,7 @@ const jobs = new Map();
 const clean = async t => { const j = jobs.get(t); if (j) { jobs.delete(t); await rm(j.dir, { recursive: true, force: true }); } };
 setInterval(() => jobs.forEach((j, t) => j.exp < Date.now() && clean(t)), 60000);
 
-app.get('/api/prepare', async req => {
+app.get('/api/prepare', RL(15), async req => {
   const { f, k, e } = req.query;
   const url = await safeUrl(req.query.url);
   if (!/^[\w.+-]{1,40}$/.test(f || '')) throw err(400, 'Format tidak valid');
@@ -159,7 +160,7 @@ app.get('/api/prepare', async req => {
   finally { busy--; }
 });
 
-app.get('/api/file/:t', (req, reply) => {
+app.get('/api/file/:t', RL(60), (req, reply) => {
   const j = jobs.get(req.params.t);
   if (!j) throw err(404, 'File sudah kedaluwarsa, siapkan ulang');
   reply.raw.on('close', () => clean(req.params.t)); // sekali unduh, lalu dihapus
