@@ -14,6 +14,9 @@ const TOOLS=[
 const ico=k=>`<span class="ico"><svg viewBox="0 0 24 24">${P[k]}</svg></span>`;
 window.GlassKit={TOOLS,ico,cards(el){el.innerHTML=TOOLS.map((t,i)=>{const tag=t.live?'a':'div',h=t.live?` href="${t.p}"`:'';
  return `<${tag} class="glass card ${t.live?'live':'soon'}"${h} style="--n:${i}">${ico(t.i)}<b>${t.n}</b><p>${t.d}</p><span class="chip">${t.live?'Open':'Coming soon'}</span></${tag}>`}).join('')}};
+const TC={light:['#f5f5f5','#7b7b7b'],dark:['#0a0a0a','#050505']};
+const tcolor=()=>{const m=$('meta[name=theme-color]');if(!m)return;const b=D.body.classList;m.content=TC[R.dataset.theme==='dark'?'dark':'light'][(b.contains('menu')||b.contains('dim'))?1:0]};
+GlassKit.dim=v=>{D.body.classList.toggle('dim',!!v);tcolor()};
 const here=location.pathname.replace(/\/$/,'').replace(/\.html$/,'')||'/';
 const item=(t,cur)=>{const live=t.live||t.home,tag=live?'a':'div';
  return `<${tag} class="di${cur?' cur':''}${live?'':' soon'}"${live?` href="${t.p}"`:' aria-disabled="true"'}${cur?' aria-current="page"':''}>${ico(t.i)}<span class="tx"><b>${t.n}</b><small>${t.d}</small></span>${live?'':'<span class="chip">Soon</span>'}</${tag}>`};
@@ -25,7 +28,7 @@ function mount(){
   +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b> &middot; <a class="lk" href="/legal">Privacy &amp; Terms</a></p>';
  D.body.append(sc,dr);
  const mq=matchMedia('(min-width:1280px)'),side=()=>{if(mq.matches)D.body.classList.remove('menu');dr.inert=mq.matches?false:!D.body.classList.contains('menu')};mq.addEventListener('change',side);side();
- const set=v=>{D.body.classList.toggle('menu',v);mb.setAttribute('aria-expanded',v);dr.inert=!v;(v?dr.querySelector('.x'):mb).focus({preventScroll:true})};
+ const set=v=>{D.body.classList.toggle('menu',v);tcolor();mb.setAttribute('aria-expanded',v);dr.inert=!v;(v?dr.querySelector('.x'):mb).focus({preventScroll:true})};
  mb.onclick=()=>{set(true)};sc.onclick=()=>{set(false)};dr.querySelector('.x').onclick=()=>{set(false)};
  dr.onclick=e=>{if(e.target.closest('a'))set(false)};
  D.addEventListener('keydown',e=>e.key==='Escape'&&D.body.classList.contains('menu')&&set(false));

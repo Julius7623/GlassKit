@@ -17,9 +17,9 @@
 try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
-<link rel="stylesheet" href="/base.css?v=7">
+<link rel="stylesheet" href="/base.css?v=8">
 <link rel="stylesheet" href="/ui.css?v=10">
-<script src="/shell.js?v=20" defer></script>
+<script src="/shell.js?v=21" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -70,8 +70,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 .sheet{position:fixed;left:0;right:0;top:0;height:var(--vh,100dvh);transform:translateY(var(--vt,0px));z-index:50;display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom));visibility:hidden;pointer-events:none;transition:visibility 0s .45s,padding .25s var(--e)}
 .sheet.kb{padding-bottom:8px}
 .sheet.open{visibility:visible;pointer-events:auto;transition-delay:0s}
-.sheet .sc{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .3s;touch-action:none}
-.sheet.open .sc{opacity:1}
+.sheet .sc{position:absolute;inset:0;background:transparent;touch-action:none}
 .sheet .pn{position:relative;width:min(100%,520px);height:580px;max-height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:28px;background:var(--bg);border:1px solid var(--gb);box-shadow:0 20px 60px rgba(0,0,0,.35);transform:translateY(28px) scale(.97);opacity:0;transition:transform .45s var(--spring),opacity .25s,max-height .3s var(--e);outline:0}
 .sheet.open .pn{transform:none;opacity:1}
 @media(min-width:600px){.sheet{align-items:center}}
@@ -513,14 +512,14 @@ if(vv){vv.addEventListener('resize',sched);vv.addEventListener('scroll',sched)}
 addEventListener('orientationchange',()=>setTimeout(fit,300));
 function openSheet(){
  ps.value='';list();fit();
- sheet.classList.add('open');
+ sheet.classList.add('open');GlassKit.dim(true);
  for(const e of [$('header'),$('main')])e.inert=true;
  document.body.style.overflow='hidden';
  const s=pl.querySelector('.sel');if(s)pl.scrollTop=s.offsetTop-pl.clientHeight/2+s.offsetHeight/2;
  (matchMedia('(pointer:fine)').matches?ps:pn).focus({preventScroll:true})}
 function closeSheet(){
  if(!sheet.classList.contains('open'))return;
- sheet.classList.remove('open');
+ sheet.classList.remove('open');GlassKit.dim(false);
  for(const e of [$('header'),$('main')])e.inert=false;
  document.body.style.overflow='';
  const b=$('#cc');if(b)b.focus({preventScroll:true})}
