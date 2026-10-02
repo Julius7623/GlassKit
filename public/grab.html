@@ -18,8 +18,8 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=4">
-<link rel="stylesheet" href="/ui.css?v=8">
-<script src="/shell.js?v=10" defer></script>
+<link rel="stylesheet" href="/ui.css?v=9">
+<script src="/shell.js?v=11" defer></script>
 
 </head>
 <body data-own-theme>
@@ -68,7 +68,7 @@ const site=s=>(Object.entries(sites).find(([k])=>s.includes(k))||[])[1]||(s.star
 const MB=(n,ex)=>!n?t('unk'):(ex?'':'~')+(n>=1e9?(n/1e9).toFixed(2)+' GB':n<1e7?Math.max(.1,n/1e6).toFixed(1)+' MB':Math.round(n/1e6)+' MB');
 const T=s=>s?[Math.floor(s/3600),Math.floor(s/60)%60,Math.floor(s%60)].filter((x,i)=>i||x).map((x,i)=>i?String(x).padStart(2,'0'):x).join(':'):'';
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const say=(m,ms=3800)=>{tt.textContent=m;tt.classList.add('on');clearTimeout(say.t);say.t=setTimeout(()=>tt.classList.remove('on'),ms)};
+const say=(m,ms=3800)=>{GlassKit.blend(tt,m,tt.classList.contains('on'));tt.classList.add('on');clearTimeout(say.t);say.t=setTimeout(()=>tt.classList.remove('on'),ms)};
 
 const main=$('main'),tsw=$('#tsw'),dark=()=>document.documentElement.dataset.theme==='dark';
 function sync(){tsw.classList.toggle('on',dark());tsw.setAttribute('aria-checked',dark())}
@@ -125,7 +125,7 @@ const fail=e=>{lastErr=e;const x=explain(e);
 const infoCache=new Map();let slowT;
 function loading(){
   put(`<div class="glass pv skl"><div class="th"></div><div class="info"><i></i><i></i><i class="s"></i></div></div><div class="glass sk"><div class="spin"></div><b>${t('look')}</b><small id="lw">${t('wait')}</small></div>`);
-  clearTimeout(slowT);slowT=setTimeout(()=>{const e=$('#lw');if(e)e.textContent=t('slow')},7000);
+  clearTimeout(slowT);slowT=setTimeout(()=>{const e=$('#lw');if(e)GlassKit.blend(e,t('slow'))},7000);
   lock(true);
 }
 function done(){clearTimeout(slowT);lock(false)}

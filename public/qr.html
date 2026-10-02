@@ -18,8 +18,8 @@ try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
 <link rel="stylesheet" href="/base.css?v=4">
-<link rel="stylesheet" href="/ui.css?v=8">
-<script src="/shell.js?v=10" defer></script>
+<link rel="stylesheet" href="/ui.css?v=9">
+<script src="/shell.js?v=11" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -451,8 +451,8 @@ function render(){
 const field=([k,l,t,p])=>`<label class="fld"><span>${l}</span><input data-k="${k}" type="${t}" placeholder="${p}" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" value="${esc(vals[k]||'')}"></label>`;
 const chev='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>';
 function ccBtn(){const b=$('#cc');if(b)b.innerHTML=`<i class="iso">${cc.iso}</i><b>${dial(cc)}</b>${chev}`}
-function hint(){window.GlassKit?GlassKit.morph($('#form'),hint0,{fade:false}):hint0()}
-function hint0(){const h=$('#wh');if(!h)return;const n=waNum();h.textContent=n?'Opens a chat with +'+n:'Type the number without the country code. A leading 0 is removed for you.'}
+function hint(){hint0()}
+function hint0(){const h=$('#wh');if(!h)return;const n=waNum(),t=n?'Opens a chat with +'+n:'Type the number without the country code. A leading 0 is removed for you.',s=!!n;if(h._s===s){const sp=h.querySelector('span:not([data-g])');if(sp)sp.textContent=t;else h.textContent=t;h._bt=t}else{const first=h._s===undefined;h._s=s;GlassKit.blend(h,t,!first)}}
 function fields(){const f=$('#form');window.GlassKit?GlassKit.morph(f,fields0):fields0()}
 function fields0(){
  $('#form').innerHTML=mode==='wa'
@@ -502,7 +502,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 
 /* ---------- Sliders ---------- */
 Seg($('#tabs'),0,i=>{mode=MODES[i];fields();render()});
-Seg($('#ec'),1,i=>{lvl=LV[i];$('#ecn').textContent=NOTE[i];render()});
+Seg($('#ec'),1,i=>{lvl=LV[i];GlassKit.blend($('#ecn'),NOTE[i]);render()});
 $('#ecn').textContent=NOTE[1];
 
 /* ---------- Layout desktop: kartu Error correction pindah ke kolom kiri ---------- */

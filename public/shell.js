@@ -43,7 +43,7 @@ function themeInit(){
  tsw.addEventListener('click',e=>{if(e.detail===0)set(!dark())});
  sync();requestAnimationFrame(()=>requestAnimationFrame(()=>R.classList.add('ready')));
 }
-const go=()=>{mount();themeInit();const c=$('#cards');if(c)GlassKit.cards(c);const q=$('#qr');if(q)new MutationObserver(()=>{q.classList.remove('pop');void q.offsetWidth;q.classList.add('pop')}).observe(q,{childList:true})};
+const go=()=>{mount();themeInit();const c=$('#cards');if(c)GlassKit.cards(c)};
 D.readyState==='loading'?D.addEventListener('DOMContentLoaded',go):go();
 })();
 
@@ -86,4 +86,22 @@ GlassKit.morph=(el,fn,o={})=>{
  if(el._ov===undefined)el._ov=el.style.overflow;el.style.overflow='hidden';
  const a=el._m=el.animate([{height:h0+'px'},{height:h1+'px'}],{duration:Math.min(620,300+Math.abs(h1-h0)*1.2),easing:E});
  const end=()=>{if(el._m===a){el._m=null;el.style.overflow=el._ov;el._ov=undefined}};a.onfinish=end;a.oncancel=end;
+}})();
+
+(()=>{ // blend: teks lama memudar keluar sambil teks baru memudar masuk (dengan blur tipis), tinggi kotak ikut berubah mulus. Maknanya "pesan ini berganti", bukan kedip
+const RM=matchMedia('(prefers-reduced-motion:reduce)'),E='cubic-bezier(.32,.72,0,1)';
+GlassKit.blend=(el,txt,on=true)=>{
+ if(!el)return;const cur=el._bt!==undefined?el._bt:el.textContent;
+ if(cur===txt&&el.childElementCount<=1&&el.textContent.trim()===txt.trim())return;
+ el.querySelectorAll('[data-g]').forEach(g=>g.remove());
+ if(!on||RM.matches||!el.animate||!cur){el._bt=txt;el.textContent=txt;return}
+ const pos=getComputedStyle(el).position;el._bt=txt;
+ GlassKit.morph(el,()=>{
+  const g=document.createElement('span'),n=document.createElement('span');
+  g.dataset.g='';g.setAttribute('aria-hidden','true');g.textContent=cur;g.style.cssText='position:absolute;inset:0;pointer-events:none';
+  n.textContent=txt;if(pos==='static')el.style.position='relative';
+  el.replaceChildren(n,g);
+  n.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:380,easing:E});
+  g.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:300,easing:E,fill:'forwards'}).onfinish=()=>{g.remove();if(pos==='static')el.style.position=''};
+ },{fade:false});
 }})();
