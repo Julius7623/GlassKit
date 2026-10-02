@@ -19,7 +19,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </script>
 <link rel="stylesheet" href="/base.css?v=5">
 <link rel="stylesheet" href="/ui.css?v=10">
-<script src="/shell.js?v=17" defer></script>
+<script src="/shell.js?v=18" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -31,6 +31,18 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 .seg button{position:relative;z-index:1;flex:1 1 0;min-width:0;min-height:36px;padding:0 8px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:15px;font-weight:600;color:var(--t2);white-space:nowrap;cursor:pointer;transition:color .3s;-webkit-tap-highlight-color:transparent}
 .seg button[aria-selected=true],.seg button[aria-checked=true]{color:var(--t)}
 .seg.sm{width:100%;max-width:340px;margin:16px 0 0}
+/* Lensa kaca: label di dalam kaca dibelokkan di tepinya (refraksi), ada kilau tepi. Kaca di atas label asli; latar lensa menutup label asli di bawahnya */
+.seg.has-lens .thumb{z-index:2;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.lensclip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;filter:url(#lens)}
+.lens{position:absolute;top:0;bottom:0;left:0;width:calc(var(--n)*100%);display:flex;color:var(--t);background:linear-gradient(180deg,#fff,#efeff3);translate:calc(-1*var(--x,calc(var(--i,0)*100%/var(--n))));transition:translate .75s var(--spring)}
+.lens span{flex:1 1 0;display:grid;place-items:center;font-size:15px;font-weight:600;white-space:nowrap}
+.seg.sm .lens span{font-size:13px}
+.seg[data-edge]:not(.drag) .lens{transition:translate .7s cubic-bezier(.22,.9,.3,1)}
+.seg.drag .lens{transition:none}
+.seg.press .lens{opacity:.88}
+.seg.has-lens .thumb::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 3px 5px rgba(255,255,255,.7),inset 0 -4px 7px rgba(0,0,0,.09),inset 0 0 12px rgba(255,255,255,.35)}
+[data-theme=dark] .lens{background:linear-gradient(180deg,#68686d,#4b4b50)}
+[data-theme=dark] .seg.has-lens .thumb::after{box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),inset 0 3px 5px rgba(255,255,255,.28),inset 0 -4px 7px rgba(0,0,0,.25),inset 0 0 12px rgba(255,255,255,.12)}
 .seg[data-edge]:not(.drag) .thumb{transition:translate .7s cubic-bezier(.22,.9,.3,1),scale .45s var(--spring),box-shadow .3s}
 /* Kaca cair: tipis, ada kilau tepi atas, makin bening dan membesar saat disentuh; meregang mengikuti kecepatan geser */
 .seg .thumb{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.8));-webkit-backdrop-filter:blur(10px) saturate(1.8);backdrop-filter:blur(10px) saturate(1.8);box-shadow:0 2px 6px rgba(0,0,0,.2),inset 0 1px 0 #fff,inset 0 -1px 1px rgba(0,0,0,.07),0 0 0 .5px rgba(0,0,0,.08)}
@@ -108,7 +120,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </style>
 </head>
 
-<body>
+<body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage href="data:image/png;base64,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" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="18" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
 <header>
   <button class="mb" id="mb" aria-label="Open menu" aria-expanded="false" aria-controls="dr"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
   <button class="sw" id="tsw" role="switch" aria-label="Dark mode"><span class="kn">
@@ -161,6 +173,7 @@ function Seg(el,start,on){
   let cur=start,id=null,x0=0,p0=0,sw=0,mv=false,grab=false;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   el.style.setProperty('--n',n);
+  if(window.CSS&&CSS.supports('filter','url(#lens)')){th.innerHTML='<div class="lensclip"><div class="lens" aria-hidden="true">'+bs.map(b=>'<span>'+b.textContent+'</span>').join('')+'</div></div>';el.classList.add('has-lens')}   // lensa: salinan label di dalam kaca, dibelokkan di tepinya
   const paint=()=>{el.style.setProperty('--i',cur);cur===0||cur===n-1?el.setAttribute('data-edge',''):el.removeAttribute('data-edge');bs.forEach((b,i)=>{b.setAttribute(A,i===cur);b.tabIndex=i===cur?0:-1})};
   const set=i=>{i=clamp(i,0,n-1);const ch=i!==cur,d=Math.abs(i-cur);cur=i;paint();if(ch){GlassKit.jelly(th,d,i===0?'left':i===n-1?'right':'center');on(i)}};
   let lx=0,lt=0,sxT=0;const rb=v=>{const mx=(n-1)*sw,q=o=>6*(1-Math.exp(-o/30));return v<0?-q(-v):v>mx?mx+q(v-mx):v};   // rubber band di ujung
