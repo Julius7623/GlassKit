@@ -66,21 +66,25 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 .cc svg{width:16px;height:16px;fill:none;stroke:var(--t2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .iso{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;border-radius:7px;background:rgba(127,127,127,.2);font-style:normal;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--t2)}
 
-/* Country picker sheet */
-.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;visibility:hidden;pointer-events:none;transition:visibility 0s .45s}
+/* Country picker: kartu mengambang yang mengikuti visual viewport, jadi selalu di atas keyboard */
+.sheet{position:fixed;left:0;right:0;top:0;height:var(--vh,100dvh);transform:translateY(var(--vt,0px));z-index:50;display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom));visibility:hidden;pointer-events:none;transition:visibility 0s .45s,padding .25s var(--e)}
+.sheet.kb{padding-bottom:8px}
 .sheet.open{visibility:visible;pointer-events:auto;transition-delay:0s}
-.sheet .sc{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .3s}
+.sheet .sc{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;transition:opacity .3s;touch-action:none}
 .sheet.open .sc{opacity:1}
-.sheet .pn{position:relative;width:min(100%,520px);max-height:min(78dvh,640px);display:flex;flex-direction:column;border-radius:28px 28px 0 0;background:var(--bg);border:1px solid var(--gb);box-shadow:0 -10px 40px rgba(0,0,0,.3);transform:translateY(100%);transition:transform .45s var(--spring);padding-bottom:env(safe-area-inset-bottom);outline:0}
-.sheet.open .pn{transform:none}
-@media(min-width:600px){.sheet{align-items:center}.sheet .pn{border-radius:28px;max-height:min(70dvh,620px);transform:translateY(24px) scale(.97);opacity:0;transition:transform .45s var(--spring),opacity .25s}.sheet.open .pn{transform:none;opacity:1}}
+.sheet .pn{position:relative;width:min(100%,520px);height:580px;max-height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:28px;background:var(--bg);border:1px solid var(--gb);box-shadow:0 20px 60px rgba(0,0,0,.35);transform:translateY(28px) scale(.97);opacity:0;transition:transform .45s var(--spring),opacity .25s,max-height .3s var(--e);outline:0}
+.sheet.open .pn{transform:none;opacity:1}
+@media(min-width:600px){.sheet{align-items:center}}
+.pt{flex:none;position:relative;z-index:2;background:var(--bg);padding-bottom:10px}
+.pt::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--gb)}
 .ph{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px}.ph b{font-size:18px;font-weight:700}
-.px{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(127,127,127,.18);color:inherit;border:0;cursor:pointer}
-.px svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.ps{flex:none;margin:4px 16px 8px;height:44px;border-radius:14px;border:1px solid var(--gb);background:rgba(127,127,127,.1);color:inherit;font:inherit;padding:0 14px;outline:0}
+.px{width:44px;height:44px;margin:-4px -6px -4px 0;border-radius:50%;display:grid;place-items:center;background:none;color:inherit;border:0;cursor:pointer;position:relative}
+.px::before{content:"";position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(127,127,127,.18)}
+.px svg{position:relative;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.ps{display:block;width:calc(100% - 32px);margin:4px 16px 0;height:44px;border-radius:14px;border:1px solid var(--gb);background:rgba(127,127,127,.1);color:inherit;font:inherit;padding:0 14px;outline:0}
 .ps:focus{border-color:var(--t2)}
-.plist{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 8px 12px}
-.lh{position:sticky;top:0;z-index:1;padding:8px 12px 4px;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--t2);background:var(--bg)}
+.plist{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 8px 12px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 10px);mask-image:linear-gradient(to bottom,transparent 0,#000 10px)}
+.lh{position:sticky;top:-4px;z-index:1;margin:0 -8px;padding:8px 20px 4px;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--t2);background:var(--bg)}
 .ci{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:6px 12px;border:0;border-radius:14px;text-align:left;background:transparent;color:inherit;font:inherit;cursor:pointer}
 .ci:hover{background:rgba(127,127,127,.12)}
 .ci.sel{background:rgba(127,127,127,.2)}
@@ -490,7 +494,7 @@ $('#form').onclick=e=>{if(e.target.closest('#cc'))openSheet()};
 
 /* ---------- Country picker ---------- */
 const sheet=document.createElement('div');sheet.className='sheet';
-sheet.innerHTML='<div class="sc"></div><div class="pn" role="dialog" aria-modal="true" aria-label="Choose country" tabindex="-1"><div class="ph"><b>Choose country</b><button type="button" class="px" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><input class="ps" type="search" placeholder="Search country or code" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search country or code"><div class="plist" role="listbox" aria-label="Countries"></div></div>';
+sheet.innerHTML='<div class="sc"></div><div class="pn" role="dialog" aria-modal="true" aria-label="Choose country" tabindex="-1"><div class="pt"><div class="ph"><b>Choose country</b><button type="button" class="px" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><input class="ps" type="search" placeholder="Search country or code" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search country or code"></div><div class="plist" role="listbox" aria-label="Countries"></div></div>';
 document.body.append(sheet);
 const pn=sheet.querySelector('.pn'),ps=sheet.querySelector('.ps'),pl=sheet.querySelector('.plist');
 function list(q=''){
@@ -502,8 +506,13 @@ function list(q=''){
   if(!q&&l!==L){L=l;h+=`<div class="lh">${l}</div>`}
   h+=`<button type="button" class="ci${c.iso===cc.iso?' sel':''}" role="option" aria-selected="${c.iso===cc.iso}" data-i="${c.iso}"><i class="iso">${c.iso}</i><span class="nm">${esc(c.name)}</span><b>${dial(c)}</b></button>`}
  pl.innerHTML=h||'<p class="pe">No country found.</p>'}
+const vv=window.visualViewport;
+function fit(){const h=vv?vv.height:innerHeight;sheet.style.setProperty('--vh',h+'px');sheet.style.setProperty('--vt',(vv?vv.offsetTop:0)+'px');sheet.classList.toggle('kb',h<innerHeight-120)}
+let fr;const sched=()=>{cancelAnimationFrame(fr);fr=requestAnimationFrame(fit)};
+if(vv){vv.addEventListener('resize',sched);vv.addEventListener('scroll',sched)}
+addEventListener('orientationchange',()=>setTimeout(fit,300));
 function openSheet(){
- ps.value='';list();
+ ps.value='';list();fit();
  sheet.classList.add('open');
  for(const e of [$('header'),$('main')])e.inert=true;
  document.body.style.overflow='hidden';
@@ -520,7 +529,7 @@ function pick(iso){
  cc=c;store('qrcc',c.iso);ccBtn();hint();render();closeSheet();
  const i=$('#pn');if(i&&matchMedia('(pointer:fine)').matches)i.focus()}
 pl.onclick=e=>{const b=e.target.closest('.ci');if(b)pick(b.dataset.i)};
-ps.oninput=()=>list(ps.value);
+ps.oninput=()=>{list(ps.value);pl.scrollTop=0};
 ps.onkeydown=e=>{if(e.key==='Enter'){const b=pl.querySelector('.ci');if(b)pick(b.dataset.i)}};
 sheet.querySelector('.sc').onclick=closeSheet;
 sheet.querySelector('.px').onclick=closeSheet;
