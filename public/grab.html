@@ -18,8 +18,8 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=4">
-<link rel="stylesheet" href="/ui.css?v=7">
-<script src="/shell.js?v=9" defer></script>
+<link rel="stylesheet" href="/ui.css?v=8">
+<script src="/shell.js?v=10" defer></script>
 
 </head>
 <body data-own-theme>
@@ -100,7 +100,8 @@ function remember(url,title){const l=recents().filter(x=>x.u!==url);l.unshift({u
 function emptyHTML(){const l=recents();
   return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(s||'Link')}</small></span></button>`}).join(''):'')}
 const stp=n=>[...$('#st').children].forEach((l,i)=>l.className=i+1<n?'done':i+1===n?'on':'');
-const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim');clearTimeout(put.t);put.t=setTimeout(()=>out.classList.remove('anim'),1300)}; // animasi masuk cukup sekali; lepas kelasnya supaya tidak terulang saat tombol ditekan
+const M=(e,f,o)=>window.GlassKit?GlassKit.morph(e,f,o):f();
+const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');M(out,()=>{out.innerHTML=h},{fade:false});void out.offsetWidth;out.classList.add('anim');clearTimeout(put.t);put.t=setTimeout(()=>out.classList.remove('anim'),1300)}; // animasi masuk cukup sekali; lepas kelasnya supaya tidak terulang saat tombol ditekan
 const ER={
 BOT:{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1},
 BAD_URL:{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'},
@@ -175,7 +176,7 @@ out.onclick=async ev=>{
   out.querySelectorAll('.fmt').forEach(x=>{if(x!==b)x.setAttribute('aria-disabled','true')});lock(true);
   const {f,k,e}=b.dataset,old=b.innerHTML,t0=Date.now();
   b.disabled=true;b.classList.add('busy');
-  b.innerHTML=`<b>${t('prep')}<em class="el">0:00</em></b><span class="pgb"><i></i></span><span class="hint">Keep this page open.</span>`;
+  M(b,()=>{b.innerHTML=`<b>${t('prep')}<em class="el">0:00</em></b><span class="pgb"><i></i></span><span class="hint">Keep this page open.</span>`},{fade:false});
   const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=b.querySelector('.el');if(!el)return;el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(s===12)b.querySelector('.hint').textContent='Larger files can take a minute or more. Keep this page open.'},1000);
   try{
     const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}`),d=await r.json();
@@ -183,7 +184,7 @@ out.onclick=async ev=>{
     const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
     stp(3);say(t('started')+MB(d.size,true));b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),2600);
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
-  finally{clearInterval(tick);delete out.dataset.busy;out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');b.innerHTML=old;b.disabled=false}
+  finally{clearInterval(tick);delete out.dataset.busy;out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');M(b,()=>{b.innerHTML=old},{fade:false});b.disabled=false}
 };
 
 

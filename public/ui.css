@@ -115,3 +115,9 @@ h1{font-weight:700;letter-spacing:-.035em}
 .fmt.ok{box-shadow:inset 0 0 0 1.5px var(--ac)}
 .fmt.ok::after{content:"\2713";position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:var(--act);font:700 13px var(--font);border:2px solid var(--bg);animation:okpop .5s var(--spring)}
 @keyframes okpop{from{scale:.4;opacity:0}}
+
+/* Slider tema: posisi awal ditentukan langsung oleh tema (tanpa menunggu JS) dan tanpa animasi sebelum halaman siap, jadi tidak bergeser saat refresh. Animasi hanya untuk perubahan oleh pengguna */
+html:not(.ready) .sw,html:not(.ready) .sw *{transition:none!important}
+html[data-theme=dark] .sw{background:#636366;--x:20px}
+html[data-theme=dark] .sw .sun{opacity:1;transform:none}
+html[data-theme=dark] .sw .moon{opacity:0;transform:scale(.6)}

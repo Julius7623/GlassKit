@@ -73,3 +73,17 @@ const pick=ev=>{const b=ev.target.closest&&ev.target.closest(SEL);return b&&!b.d
 D.addEventListener('keydown',ev=>{if(ev.repeat||ev.key!=='Enter'&&ev.key!==' ')return;const b=pick(ev);if(b)hold(b)});
 D.addEventListener('keyup',ev=>{const b=pick(ev);if(b&&b.classList.contains('holding')&&!el){b.classList.remove('holding','armed');swap(b,TAP,{duration:450,easing:S})}});
 })();
+
+(()=>{ // morph: kotak tumbuh/menyusut mengikuti isi baru dan isi baru memudar masuk. Maknanya "isi berubah"; elemen di bawahnya ikut bergeser mulus
+const RM=matchMedia('(prefers-reduced-motion:reduce)'),E='cubic-bezier(.32,.72,0,1)';
+GlassKit.morph=(el,fn,o={})=>{
+ if(!el||RM.matches||!el.animate)return fn();
+ const h0=el.offsetHeight;if(el._m)el._m.cancel();
+ fn();
+ const h1=el.offsetHeight;
+ if(o.fade!==false)[...el.children].forEach((c,i)=>c.animate([{opacity:0,translate:'0 8px'},{opacity:1,translate:'0 0'}],{duration:380,delay:Math.min(i,6)*45,easing:E,fill:'backwards'}));
+ if(Math.abs(h1-h0)<2)return;
+ if(el._ov===undefined)el._ov=el.style.overflow;el.style.overflow='hidden';
+ const a=el._m=el.animate([{height:h0+'px'},{height:h1+'px'}],{duration:Math.min(620,300+Math.abs(h1-h0)*1.2),easing:E});
+ const end=()=>{if(el._m===a){el._m=null;el.style.overflow=el._ov;el._ov=undefined}};a.onfinish=end;a.oncancel=end;
+}})();
