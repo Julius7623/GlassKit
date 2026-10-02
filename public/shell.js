@@ -94,14 +94,15 @@ GlassKit.blend=(el,txt,on=true)=>{
  if(!el)return;const cur=el._bt!==undefined?el._bt:el.textContent;
  if(cur===txt&&el.childElementCount<=1&&el.textContent.trim()===txt.trim())return;
  el.querySelectorAll('[data-g]').forEach(g=>g.remove());
- if(!on||RM.matches||!el.animate||!cur){el._bt=txt;el.textContent=txt;return}
+ const now=performance.now(),fast=now-(el._ts||0)<260;el._ts=now;
+ if(!on||fast||RM.matches||!el.animate||!cur){if(el._m)el._m.cancel();el._bt=txt;el.textContent=txt;return}
  const pos=getComputedStyle(el).position;el._bt=txt;
  GlassKit.morph(el,()=>{
   const g=document.createElement('span'),n=document.createElement('span');
   g.dataset.g='';g.setAttribute('aria-hidden','true');g.textContent=cur;g.style.cssText='position:absolute;inset:0;pointer-events:none';
   n.textContent=txt;if(pos==='static')el.style.position='relative';
   el.replaceChildren(n,g);
-  n.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:380,easing:E});
-  g.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:300,easing:E,fill:'forwards'}).onfinish=()=>{g.remove();if(pos==='static')el.style.position=''};
+  n.animate([{opacity:.4},{opacity:1}],{duration:320,easing:E});
+  g.animate([{opacity:1},{opacity:0}],{duration:160,easing:'ease-out',fill:'forwards'}).onfinish=()=>{g.remove();if(pos==='static')el.style.position=''};
  },{fade:false});
 }})();
