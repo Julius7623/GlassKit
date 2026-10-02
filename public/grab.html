@@ -18,7 +18,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=4">
-<link rel="stylesheet" href="/ui.css?v=5">
+<link rel="stylesheet" href="/ui.css?v=6">
 <script src="/shell.js?v=8" defer></script>
 
 </head>
@@ -52,6 +52,7 @@ const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const lang='en';let cur=null,lastErr=null;
 const t=k=>L[lang][k];
+const pickUrl=s=>{const m=String(s||'').match(/https?:\/\/[^\s<>"']+/i);return m?m[0].replace(/[)\]}.,;:!?]+$/,''):''}; // ambil link dari teks share (TikTok/IG menyalin teks + link)
 const sites={youtu:'YouTube',instagram:'Instagram',facebook:'Facebook','fb.':'Facebook',tiktok:'TikTok','x.com':'X',twitter:'X',reddit:'Reddit',vimeo:'Vimeo',twitch:'Twitch'};
 const IC={
 YouTube:'<svg viewBox="0 0 24 24"><rect x="1.5" y="5" width="21" height="14" rx="4.2" fill="#f03"/><path d="M10 9l5.200 3-5.200 3z" fill="#fff"/></svg>',
@@ -100,23 +101,23 @@ function emptyHTML(){const l=recents();
   return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(s||'Link')}</small></span></button>`}).join(''):'')}
 const stp=n=>[...$('#st').children].forEach((l,i)=>l.className=i+1<n?'done':i+1===n?'on':'');
 const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');out.innerHTML=h;void out.offsetWidth;out.classList.add('anim');clearTimeout(put.t);put.t=setTimeout(()=>out.classList.remove('anim'),1300)}; // animasi masuk cukup sekali; lepas kelasnya supaya tidak terulang saat tombol ditekan
-const ER=[
-[/YouTube memblokir/,{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1}],
-[/Link tidak valid|Hanya link/,{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'}],
-[/Alamat tidak diizinkan/,{title:"This address can't be used",why:'Links to private or local addresses are blocked for safety.',tip:'Use a public video link instead.'}],
-[/privat|login/,{title:'This video is private',why:'It needs a login, or only certain people can watch it.',tip:'Try a public video, or one you can open without signing in.'}],
-[/belum didukung/,{title:"This link isn't supported yet",why:"We couldn't find a video on this page.",tip:'Make sure the link opens a video, not a profile or search page.'}],
-[/tidak tersedia/,{title:"This video isn't available",why:'It may have been deleted, or it is blocked in some regions.',tip:'Check that it still plays in your browser.'}],
-[/membatasi|rate limit|too many/i,{title:'Too many requests',why:'The platform or server needs a short break.',tip:'Wait a minute, then try again.',retry:1}],
-[/terlalu besar/,{title:'This file is too large',why:'Files over 2 GB cannot be prepared.',tip:'Pick a lower quality, or choose audio only.'}],
-[/Format tidak valid/,{title:"That format isn't available",why:'The list may be out of date.',tip:'Search the link again and pick another format.'}],
-[/sibuk/,{title:'The server is busy',why:'Other downloads are running right now.',tip:'Try again in a few seconds.',retry:1}],
-[/kedaluwarsa/,{title:'This file has expired',why:'Prepared files are removed after a few minutes.',tip:'Tap the format again to prepare a new one.'}],
-[/Gagal memproses/,{title:"Couldn't process this video",why:'Something went wrong while reading it.',tip:'Try again, or pick a different format.',retry:1}]];
+const ER={
+BOT:{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1},
+BAD_URL:{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'},
+ADDR:{title:"This address can't be used",why:'Links to private or local addresses are blocked for safety.',tip:'Use a public video link instead.'},
+PRIVATE:{title:'This video is private',why:'It needs a login, or only certain people can watch it.',tip:'Try a public video, or one you can open without signing in.'},
+UNSUPPORTED:{title:"This link isn't supported yet",why:"We couldn't find a video on this page.",tip:'Make sure the link opens a video, not a profile or search page.'},
+UNAVAILABLE:{title:"This video isn't available",why:'It may have been deleted, or it is blocked in some regions.',tip:'Check that it still plays in your browser.'},
+RATE:{title:'Too many requests',why:'The platform or server needs a short break.',tip:'Wait a minute, then try again.',retry:1},
+TOO_BIG:{title:'This file is too large',why:"This server can't prepare files that big.",tip:'Pick a lower quality, or choose audio only.'},
+BAD_FORMAT:{title:"That format isn't available",why:'The list may be out of date.',tip:'Search the link again and pick another format.'},
+BUSY:{title:'The server is busy',why:'Other downloads are running right now.',tip:'Try again in a few seconds.',retry:1},
+EXPIRED:{title:'This file has expired',why:'Prepared files are removed after a few minutes.',tip:'Tap the format again to prepare a new one.'},
+FAILED:{title:"Couldn't process this video",why:'Something went wrong while reading it.',tip:'Try again, or pick a different format.',retry:1}};
 const NET={title:'No connection',why:"We couldn't reach the server.",tip:'Check your internet connection, then try again.',retry:1};
 const GEN={title:'Something went wrong',why:'An unexpected error happened on our side.',tip:'Try again in a moment.',retry:1};
 const explain=e=>{if(!e)return GEN;if(e instanceof TypeError||/failed to fetch|load failed|network/i.test(e.message))return NET;
- if(e.status===429)return ER.find(x=>/rate limit/.test(x[0].source))[1];const m=ER.find(x=>x[0].test(e.message||''));return m?m[1]:GEN};
+ return ER[e.code]||(e.status===429?ER.RATE:GEN)};
 const fail=e=>{lastErr=e;const x=explain(e);
   put(`<div class="glass err" role="alert"><div class="eic"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 16.5v.01"/><path d="M10.300 4.500L3.500 17a2 2 0 0 0 1.700 3h13.600a2 2 0 0 0 1.700-3L13.700 4.500a2 2 0 0 0-3.400 0z"/></svg></div><b>${x.title}</b><p>${x.why}</p><p class="tip">${x.tip}</p><div class="eb">${x.retry?'<button class="btn" id="rt">Try again</button>':''}<button class="ghost" id="cl">Clear link</button></div></div>`);
   const r=$('#rt');if(r)r.onclick=()=>load();$('#cl').onclick=()=>xb.click()};
@@ -131,7 +132,7 @@ const xb=$('#x'),gh=$('#p');
 function lock(v){$('#go').disabled=xb.disabled=gh.disabled=u.readOnly=v}
 async function load(){
   if($('#go').disabled)return;
-  let url=u.value.trim();
+  let url=pickUrl(u.value)||u.value.trim();if(url!==u.value.trim()){u.value=url;u.oninput()}
   if(url&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(url)&&/^[^\s\/]+\.[^\s\/]{2,}(\/|$|\?)/.test(url)){url='https://'+url.replace(/^\/+/,'');u.value=url;u.oninput()}
   if(!/^https?:\/\//i.test(url)){const b=$('.bar');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');return say("That doesn't look like a link. Paste a full link that starts with http or https.",4500)}
   cur=lastErr=null;loading();
@@ -139,7 +140,7 @@ async function load(){
     const c=infoCache.get(url);let d;
     if(c&&Date.now()-c.t<3e5)d=c.d; // link sama dalam 5 menit: tanpa permintaan baru ke server
     else{const r=await fetch('/api/info?url='+encodeURIComponent(url));d=await r.json();
-      if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});infoCache.set(url,{d,t:Date.now()})}
+      if(!r.ok)throw Object.assign(Error(d.error),{status:r.status,code:d.code});infoCache.set(url,{d,t:Date.now()})}
     cur=d;show(d);remember(url,d.title);
   }catch(e){fail(e)}finally{done()}
 }
@@ -178,7 +179,7 @@ out.onclick=async ev=>{
   const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=b.querySelector('.el');if(!el)return;el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(s===12)b.querySelector('.hint').textContent='Larger files can take a minute or more. Please keep this page open.'},1000);
   try{
     const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}`),d=await r.json();
-    if(!r.ok)throw Object.assign(Error(d.error),{status:r.status});
+    if(!r.ok)throw Object.assign(Error(d.error),{status:r.status,code:d.code});
     const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
     stp(3);say(t('started')+MB(d.size,true));
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
@@ -190,13 +191,14 @@ u.oninput=()=>{const b=$('#bd'),v=u.value.trim(),x=site(v);
   if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',x);b.title=x;b.classList.remove('hide')}else b.classList.add('hide');
   xb.classList.toggle('hide',!v);gh.classList.toggle('hide',!!v)};
 xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put(emptyHTML());u.focus()};
-u.onpaste=()=>setTimeout(()=>{u.oninput();load()},60);
+u.onpaste=e=>{const x=(e.clipboardData||window.clipboardData).getData('text'),l=pickUrl(x);if(l&&l!==x.trim()){e.preventDefault();u.value=l} // input type=url membuang baris baru, jadi ambil link sebelum disisipkan
+  setTimeout(()=>{u.oninput();load()},60)};
 u.onkeydown=e=>{if(e.key==='Enter')load()};
 $('#go').onclick=load;
-$('#p').onclick=async()=>{try{u.value=await navigator.clipboard.readText();u.oninput();load()}catch{say(t('clip'))}};
+$('#p').onclick=async()=>{try{const x=await navigator.clipboard.readText();u.value=pickUrl(x)||x.trim();u.oninput();load()}catch{say(t('clip'))}};
 theme(document.documentElement.dataset.theme);apply();put(emptyHTML());requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('ready')));
 const q=new URLSearchParams(location.search),pre=q.get('url')||q.get('text');
-if(pre){u.value=pre;u.oninput();load()}
+if(pre){u.value=pickUrl(pre)||pre.trim();u.oninput();load()}
 </script>
 </body>
 </html>
