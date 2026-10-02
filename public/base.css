@@ -140,7 +140,7 @@ html.ready{transition:--bg .55s cubic-bezier(.4,0,.2,1),--t .55s cubic-bezier(.4
 .drawer{background:color-mix(in srgb,var(--bg) 66%,transparent);-webkit-backdrop-filter:blur(34px) saturate(180%);backdrop-filter:blur(34px) saturate(180%)}
 /* switch: knob putih -> lensa kaca saat ditekan */
 .sw{box-shadow:inset 0 1px 3px rgba(0,0,0,.18),inset 0 0 0 .5px rgba(0,0,0,.06)}
-.kn{position:absolute;top:4px;left:4px;width:36px;height:28px;border-radius:99px;display:grid;place-items:center;color:#1c1c1e;translate:var(--x,0px) 0;scale:1;transition:translate .65s var(--spring),scale .5s var(--spring),color .3s;will-change:translate,scale}
+.kn{position:absolute;top:4px;left:4px;width:36px;height:28px;border-radius:99px;display:grid;place-items:center;color:#1c1c1e;translate:var(--x,0px) 0;scale:1;transition:translate .85s var(--spring),scale .5s var(--spring),color .3s;will-change:translate,scale}
 .kn>*{position:relative;z-index:1}
 .kn::before,.kn::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;transition:opacity .24s cubic-bezier(.4,0,.2,1)}
 .kn::before{background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.26),0 0 0 .5px rgba(0,0,0,.08)}
