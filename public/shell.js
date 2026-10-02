@@ -102,7 +102,7 @@ GlassKit.blend=(el,txt,on=true)=>{
   g.dataset.g='';g.setAttribute('aria-hidden','true');g.textContent=cur;g.style.cssText='position:absolute;inset:0;pointer-events:none';
   n.textContent=txt;if(pos==='static')el.style.position='relative';
   el.replaceChildren(n,g);
-  n.animate([{opacity:.4},{opacity:1}],{duration:320,easing:E});
-  g.animate([{opacity:1},{opacity:0}],{duration:160,easing:'ease-out',fill:'forwards'}).onfinish=()=>{g.remove();if(pos==='static')el.style.position=''};
+  n.style.display='block';n.animate([{opacity:0,filter:'blur(3px)',translate:'0 6px'},{opacity:1,filter:'blur(0)',translate:'0 0'}],{duration:340,delay:70,easing:E,fill:'backwards'});
+  g.animate([{opacity:1,filter:'blur(0)',translate:'0 0'},{opacity:0,filter:'blur(3px)',translate:'0 -6px'}],{duration:220,easing:'ease-in',fill:'forwards'}).onfinish=()=>{g.remove();if(pos==='static')el.style.position=''};
  },{fade:false});
 }})();
