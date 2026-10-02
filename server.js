@@ -13,7 +13,7 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const app = Fastify({ logger: false, trustProxy: true }); // logger off: URL tidak pernah dicatat
-await app.register(rateLimit, { global: false, errorResponseBuilder: (_q, c) => ({ statusCode: 429, error: 'Too Many Requests', message: `Terlalu banyak permintaan, coba lagi dalam ${Math.ceil(c.ttl / 1000)} detik` }) }); // hanya /api/* yang dibatasi; halaman & aset statis tidak
+await app.register(rateLimit, { global: false, errorResponseBuilder: (_q, c) => ({ statusCode: 429, ec: 'RATE', error: 'Too Many Requests', message: `Terlalu banyak permintaan, coba lagi dalam ${Math.ceil(c.ttl / 1000)} detik` }) }); // hanya /api/* yang dibatasi; halaman & aset statis tidak
 const RL = max => ({ config: { rateLimit: { max, timeWindow: '1 minute' } } });
 const PUB = fileURLToPath(new URL('./public', import.meta.url));
 await app.register(fastifyStatic, {
@@ -33,31 +33,63 @@ app.get('/sitemap.xml', (q, r) => r.type('application/xml').send(
   Object.keys(PAGES).map(p => `  <url><loc>${origin(q)}${p === '/' ? '' : p}</loc></url>`).join('\n') + `\n</urlset>\n`));
 app.get('/robots.txt', (q, r) => r.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${origin(q)}/sitemap.xml\n`));
 app.get('/healthz', (_q, r) => r.type('text/plain').send('ok')); // untuk UptimeRobot dkk
-app.addHook('onSend', async (_q, r) => { r.header('X-Content-Type-Options', 'nosniff'); r.header('Referrer-Policy', 'strict-origin-when-cross-origin'); });
+const CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'";
+app.addHook('onSend', async (_q, r) => { r.header('X-Content-Type-Options', 'nosniff'); r.header('Referrer-Policy', 'strict-origin-when-cross-origin'); r.header('Content-Security-Policy', CSP); });
 app.setErrorHandler((e, _q, r) =>
-  r.code(e.statusCode || 500).send({ error: e.statusCode < 500 ? e.message : 'Terjadi kesalahan server' }));
+  r.code(e.statusCode || 500).send({ error: e.statusCode < 500 ? e.message : 'Terjadi kesalahan server', code: e.ec }));
 
-const err = (c, m) => Object.assign(new Error(m), { statusCode: c });
-const priv = ip => /^(10\.|127\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1?$|f[cd]|fe80)/i.test(ip.replace(/^::ffff:/i, ''));
+const MAX_MB = +process.env.MAX_MB || 700; // instance gratis hanya 512 MB RAM: batasi ukuran file
+const MSG = {
+  BAD_URL: 'Link tidak valid',
+  ADDR: 'Alamat tidak diizinkan',
+  BOT: 'YouTube memblokir permintaan dari server ini',
+  PRIVATE: 'Video ini privat atau perlu login',
+  UNSUPPORTED: 'Link ini belum didukung',
+  UNAVAILABLE: 'Video tidak tersedia',
+  RATE: 'Platform membatasi permintaan, coba lagi nanti',
+  TOO_BIG: `File terlalu besar (maks ${MAX_MB} MB)`,
+  BAD_FORMAT: 'Format tidak valid',
+  BUSY: 'Server sedang sibuk, coba sebentar lagi',
+  EXPIRED: 'File sudah kedaluwarsa, siapkan ulang',
+  FAILED: 'Gagal memproses video. Coba lagi nanti.',
+};
+// ec = kode error yang dibaca browser; teks di MSG hanya cadangan
+const err = (c, m, ec) => Object.assign(new Error(m), { statusCode: c, ec });
+const fail = (c, ec) => err(c, MSG[ec], ec);
+
+// Alamat yang tidak boleh diakses dari server (lokal, privat, CGNAT, link-local, multicast, dll)
+const priv = raw => {
+  const ip = raw.toLowerCase();
+  if (/^::ffff:[0-9a-f]{1,4}:[0-9a-f]{1,4}$/.test(ip)) return true; // IPv4-mapped bentuk hex: tolak
+  const v4 = ip.replace(/^::ffff:/, '');
+  if (isIP(v4) === 4) {
+    const [a, b] = v4.split('.').map(Number);
+    return a === 0 || a === 10 || a === 127 || a >= 224
+      || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
+      || (a === 192 && (b === 168 || b === 0)) || (a === 198 && (b === 18 || b === 19));
+  }
+  return /^(::1?$|f[cd]|fe[89ab])/.test(ip);
+};
 
 async function safeUrl(raw = '') {
-  let u; try { u = new URL(raw); } catch { throw err(400, 'Link tidak valid'); }
-  if (!/^https?:$/.test(u.protocol)) throw err(400, 'Hanya link http/https');
+  let u; try { u = new URL(raw); } catch { throw fail(400, 'BAD_URL'); }
+  if (!/^https?:$/.test(u.protocol) || u.username || u.password) throw fail(400, 'BAD_URL');
+  if (u.port && u.port !== '80' && u.port !== '443') throw fail(400, 'ADDR');
   const h = u.hostname.replace(/^\[|\]$/g, '');
   const ips = isIP(h) ? [h] : (await lookup(h, { all: true }).catch(() => [])).map(a => a.address);
-  if (!ips.length || ips.some(priv)) throw err(400, 'Alamat tidak diizinkan');
+  if (!ips.length) throw fail(400, 'BAD_URL');
+  if (ips.some(priv)) throw fail(400, 'ADDR');
   return u.href;
 }
 
-const BOT = 'YouTube memblokir permintaan dari server ini';
-const friendly = s =>
-  /confirm you.?re not a bot|not a bot/i.test(s) ? BOT
-  : /private|log ?in|sign in|cookies/i.test(s) ? 'Video ini privat atau perlu login'
-  : /unsupported url/i.test(s) ? 'Link ini belum didukung'
-  : /unavailable|removed|not exist|404/i.test(s) ? 'Video tidak tersedia'
-  : /429|too many/i.test(s) ? 'Platform membatasi permintaan, coba lagi nanti'
-  : /larger than/i.test(s) ? 'File terlalu besar (maks 2 GB)'
-  : 'Gagal memproses video. Coba lagi nanti.';
+const codeOf = s =>
+  /confirm you.?re not a bot|not a bot/i.test(s) ? 'BOT'
+  : /private|log ?in|sign in|cookies/i.test(s) ? 'PRIVATE'
+  : /unsupported url/i.test(s) ? 'UNSUPPORTED'
+  : /unavailable|removed|not exist|404/i.test(s) ? 'UNAVAILABLE'
+  : /429|too many/i.test(s) ? 'RATE'
+  : /larger than/i.test(s) ? 'TOO_BIG'
+  : 'FAILED';
 
 // Cookies YouTube (opsional): isi env YT_COOKIES dengan isi cookies.txt format Netscape
 const COOKIES = '/tmp/yt-cookies.txt';
@@ -74,7 +106,7 @@ const run = (args, ms = 600000) => new Promise((ok, no) => {
   p.on('close', c => {
     clearTimeout(t);
     if (c && process.env.DEBUG_YTDLP) console.error('[yt-dlp]', e.trim().split('\n').slice(-3).join(' | ').slice(0, 400));
-    c ? no(err(422, friendly(e))) : ok(out);
+    c ? no(fail(422, codeOf(e))) : ok(out);
   });
 });
 
@@ -85,6 +117,7 @@ const short = c => !c || c === 'none' ? null
 // YouTube sering memblokir IP datacenter. Coba beberapa player client, ingat yang berhasil (hash, bukan URL).
 const isYT = u => { try { return /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/i.test(new URL(u).hostname); } catch { return false; } };
 const CLIENTS = [['tv'], [], ['mweb'], ['web_safari']];
+const RETRY = new Set(['BOT', 'PRIVATE', 'FAILED']); // client YouTube sering salah bilang "perlu login": coba client lain dulu
 const good = new Map();
 async function tryClients(url, fn) {
   if (!isYT(url)) return fn([]);
@@ -103,15 +136,21 @@ async function tryClients(url, fn) {
       return r;
     } catch (e) {
       last = e;
-      if (e.message !== BOT && !/^Gagal memproses/.test(e.message)) throw e; // video privat/hilang/dll: tidak perlu coba lagi
+      if (!RETRY.has(e.ec)) throw e; // tidak tersedia / tidak didukung / dll: tidak perlu coba lagi
     }
   }
+  // Semua client gagal. Tanpa cookies, "perlu login" dari IP datacenter hampir selalu berarti diblokir, bukan video privat.
+  if (last.ec === 'PRIVATE' && !hasCookies) throw fail(422, 'BOT');
   throw last;
 }
 
+let infoBusy = 0;
 app.get('/api/info', RL(40), async req => {
   const url = await safeUrl(req.query.url);
-  const j = JSON.parse(await tryClients(url, ex => run([...ex, '-J', url], 40000)));
+  if (infoBusy >= 4) throw fail(503, 'BUSY');
+  infoBusy++;
+  let j;
+  try { j = JSON.parse(await tryClients(url, ex => run([...ex, '-J', url], 40000))); } finally { infoBusy--; }
   const dur = j.duration || 0;
   const map = new Map();
   for (const x of j.formats || []) {
@@ -141,17 +180,18 @@ setInterval(() => jobs.forEach((j, t) => j.exp < Date.now() && clean(t)), 60000)
 app.get('/api/prepare', RL(15), async req => {
   const { f, k, e } = req.query;
   const url = await safeUrl(req.query.url);
-  if (!/^[\w.+-]{1,40}$/.test(f || '')) throw err(400, 'Format tidak valid');
-  if (busy >= 3) throw err(503, 'Server sedang sibuk, coba sebentar lagi');
+  if (!/^[\w.+-]{1,40}$/.test(f || '')) throw fail(400, 'BAD_FORMAT');
+  if (busy >= 2) throw fail(503, 'BUSY');
   busy++;
   const dir = await mkdtemp(join(tmpdir(), 'dl-'));
   try {
-    const a = ['--max-filesize', '2G', '--restrict-filenames', '-o', join(dir, '%(title).80B.%(ext)s')];
+    const a = ['--max-filesize', MAX_MB + 'M', '--restrict-filenames', '-o', join(dir, '%(title).80B.%(ext)s')];
     if (f === 'mp3') a.push('-x', '--audio-format', 'mp3', '--audio-quality', '0');
     else if (k === 'v') a.push('-f', `${f}+ba[ext=${e === 'mp4' ? 'm4a' : 'webm'}]/${f}+ba`, '--merge-output-format', e === 'mp4' || e === 'webm' ? e : 'mkv');
     else a.push('-f', f);
-    await tryClients(url, ex => run([...ex, ...a, url]));
-    const [name] = await readdir(dir);
+    const log = await tryClients(url, ex => run([...ex, ...a, url]));
+    const name = (await readdir(dir)).find(n => !/\.(part|ytdl|temp)$/i.test(n));
+    if (!name) throw fail(422, /larger than/i.test(log) ? 'TOO_BIG' : 'FAILED'); // yt-dlp melewati file yang melebihi batas tanpa error
     const { size } = await stat(join(dir, name));
     const token = randomUUID();
     jobs.set(token, { dir, name, size, exp: Date.now() + 600000 });
@@ -162,7 +202,7 @@ app.get('/api/prepare', RL(15), async req => {
 
 app.get('/api/file/:t', RL(60), (req, reply) => {
   const j = jobs.get(req.params.t);
-  if (!j) throw err(404, 'File sudah kedaluwarsa, siapkan ulang');
+  if (!j) throw fail(404, 'EXPIRED');
   reply.raw.on('close', () => clean(req.params.t)); // sekali unduh, lalu dihapus
   return reply.type('application/octet-stream').header('Content-Length', j.size)
     .header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(j.name)}`)
