@@ -19,7 +19,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </script>
 <link rel="stylesheet" href="/base.css?v=5">
 <link rel="stylesheet" href="/ui.css?v=10">
-<script src="/shell.js?v=16" defer></script>
+<script src="/shell.js?v=17" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -163,11 +163,11 @@ function Seg(el,start,on){
   el.style.setProperty('--n',n);
   const paint=()=>{el.style.setProperty('--i',cur);cur===0||cur===n-1?el.setAttribute('data-edge',''):el.removeAttribute('data-edge');bs.forEach((b,i)=>{b.setAttribute(A,i===cur);b.tabIndex=i===cur?0:-1})};
   const set=i=>{i=clamp(i,0,n-1);const ch=i!==cur,d=Math.abs(i-cur);cur=i;paint();if(ch){GlassKit.jelly(th,d,i===0?'left':i===n-1?'right':'center');on(i)}};
-  let lx=0,lt=0,sxT=0;const rb=v=>{const mx=(n-1)*sw,q=o=>12*(1-Math.exp(-o/36));return v<0?-q(-v):v>mx?mx+q(v-mx):v};   // rubber band di ujung
+  let lx=0,lt=0,sxT=0;const rb=v=>{const mx=(n-1)*sw,q=o=>6*(1-Math.exp(-o/30));return v<0?-q(-v):v>mx?mx+q(v-mx):v};   // rubber band di ujung
   const at=x=>{const r=el.getBoundingClientRect();return clamp(Math.floor((x-r.left-4)/((r.width-8)/n)),0,n-1)};
   // true hanya jika titik sentuh ada di atas glass (thumb), dengan toleransi 4px
   const onGlass=e=>{const r=th.getBoundingClientRect(),m=4;return e.clientX>=r.left-m&&e.clientX<=r.right+m&&e.clientY>=r.top-m&&e.clientY<=r.bottom+m};
-  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);x0=lx=e.clientX;lt=performance.now();mv=false;grab=onGlass(e);
+  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);th.getAnimations().forEach(a=>a.cancel());x0=lx=e.clientX;lt=performance.now();mv=false;grab=onGlass(e);
     if(grab){sw=th.offsetWidth;p0=cur*sw;el.classList.add('press')}});
   el.addEventListener('pointermove',e=>{
     if(id===null){el.style.cursor=onGlass(e)?'grab':'pointer';return}   // hover (mouse): kursor tangan hanya di atas glass

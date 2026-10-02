@@ -36,8 +36,8 @@ function themeInit(){
  const sync=()=>{tsw.classList.toggle('on',dark());tsw.setAttribute('aria-checked',dark());$('meta[name=theme-color]').content=dark()?'#0a0a0a':'#f5f5f5'};
  const set=v=>{R.dataset.theme=v?'dark':'light';st(R.dataset.theme);sync()};
  let id=null,x0=0,p0=0,trv=0,mv=false;
- tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;clearTimeout(tsw._t);tsw.classList.add('press')});
- tsw.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;tsw.classList.add('drag');tsw.style.setProperty('--x',Math.max(0,Math.min(trv,p0+dx))+'px')});
+ tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);tsw.querySelector('.kn').getAnimations().forEach(a=>a.cancel());x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;clearTimeout(tsw._t);tsw.classList.add('press')});
+ tsw.addEventListener('pointermove',e=>{if(e.pointerId!==id)return;const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;tsw.classList.add('drag');{const x=p0+dx,q=o=>5*(1-Math.exp(-o/30));tsw.style.setProperty('--x',(x<0?-q(-x):x>trv?trv+q(x-trv):x)+'px')}});
  const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let v=dark();if(ok)v=mv?parseFloat(tsw.style.getPropertyValue('--x'))>trv/2:!v;tsw.classList.remove('drag');tsw.style.removeProperty('--x');clearTimeout(tsw._t);if(v!==dark()){tsw._t=setTimeout(()=>tsw.classList.remove('press'),180);set(v)}else{tsw.classList.remove('press');if(mv)GlassKit.jelly(tsw.querySelector('.kn'),.7,dark()?'right':'left')}};
  tsw.addEventListener('pointerup',e=>end(e,true));tsw.addEventListener('pointercancel',e=>end(e,false));
  tsw.addEventListener('click',e=>{if(e.detail===0)set(!dark())});
@@ -109,8 +109,8 @@ GlassKit.blend=(el,txt,on=true)=>{
 
 (()=>{ // jelly: kaca memanjang searah gerak lalu memantul dan mengendap, seperti benda cair yang berhenti. Maknanya "sudah mendarat di pilihan ini"
 const RM=matchMedia('(prefers-reduced-motion:reduce)');
-GlassKit.jelly=(el,d,o='center')=>{if(!el||!el.animate||RM.matches)return;const A=Math.min(.16+.1*d,.4),f=x=>x.toFixed(3),e='cubic-bezier(.4,0,.3,1)',S=(x,y,t)=>({transform:`scale(${f(x)},${f(y)})`,offset:t,easing:e});
+GlassKit.jelly=(el,d,o='center')=>{if(!el||!el.animate||RM.matches)return;const A=Math.min(.16+.1*d,.4)*(o==='center'?1:.55),f=x=>x.toFixed(3),e='cubic-bezier(.4,0,.3,1)',S=(x,y,t)=>({transform:`scale(${f(x)},${f(y)})`,offset:t,easing:e});
  el.style.transformOrigin=o+' center';   // di ujung, kaca bertumpu pada dinding track: melar ke dalam, tidak keluar
- el.animate([S(1,1,0),S(1+A,1-A*.55,.2),S(1-A*.5,1+A*.35,.42),S(1+A*.22,1-A*.12,.62),S(1-A*.08,1+A*.05,.8),S(1,1,1)],{duration:950})};
+ const a=el.animate([S(1,1,0),S(1+A,1-A*.55,.2),S(1-A*.5,1+A*.35,.42),S(1+A*.22,1-A*.12,.62),S(1-A*.08,1+A*.05,.8),S(1,1,1)],{duration:950});a.onfinish=a.oncancel=()=>{el.style.transformOrigin=''}};
 new MutationObserver(()=>{const k=document.querySelector('.sw .kn'),H=document.documentElement;if(k&&H.classList.contains('ready'))GlassKit.jelly(k,1,H.dataset.theme==='dark'?'right':'left')}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 })();
