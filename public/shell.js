@@ -112,5 +112,5 @@ const RM=matchMedia('(prefers-reduced-motion:reduce)');
 GlassKit.jelly=(el,d,o='center')=>{if(!el||!el.animate||RM.matches)return;const A=Math.min(.16+.1*d,.4)*(o==='center'?1:.55),f=x=>x.toFixed(3),e='cubic-bezier(.4,0,.3,1)',S=(x,y,t)=>({transform:`scale(${f(x)},${f(y)})`,offset:t,easing:e});
  el.style.transformOrigin=o+' center';   // di ujung, kaca bertumpu pada dinding track: melar ke dalam, tidak keluar
  const a=el.animate([S(1,1,0),S(1+A,1-A*.55,.2),S(1-A*.5,1+A*.35,.42),S(1+A*.22,1-A*.12,.62),S(1-A*.08,1+A*.05,.8),S(1,1,1)],{duration:950});a.onfinish=a.oncancel=()=>{el.style.transformOrigin=''}};
-new MutationObserver(()=>{const k=document.querySelector('.sw .kn'),H=document.documentElement;if(k&&H.classList.contains('ready'))GlassKit.jelly(k,1,H.dataset.theme==='dark'?'right':'left')}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+new MutationObserver(()=>{const k=document.querySelector('.sw .kn'),H=document.documentElement;if(k&&H.classList.contains('ready'))GlassKit.jelly(k,.5,H.dataset.theme==='dark'?'right':'left')}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 })();

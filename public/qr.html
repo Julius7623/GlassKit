@@ -17,9 +17,9 @@
 try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
-<link rel="stylesheet" href="/base.css?v=6">
+<link rel="stylesheet" href="/base.css?v=7">
 <link rel="stylesheet" href="/ui.css?v=10">
-<script src="/shell.js?v=19" defer></script>
+<script src="/shell.js?v=20" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -46,7 +46,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 .seg[data-edge]:not(.drag) .thumb{transition:translate .7s cubic-bezier(.22,.9,.3,1),scale .45s var(--spring),box-shadow .3s}
 /* Kaca cair: tipis, ada kilau tepi atas, makin bening dan membesar saat disentuh; meregang mengikuti kecepatan geser */
 .seg .thumb{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.8));-webkit-backdrop-filter:blur(10px) saturate(1.8);backdrop-filter:blur(10px) saturate(1.8);box-shadow:0 2px 6px rgba(0,0,0,.2),inset 0 1px 0 #fff,inset 0 -1px 1px rgba(0,0,0,.07),0 0 0 .5px rgba(0,0,0,.08)}
-.seg.press .thumb{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.4));-webkit-backdrop-filter:blur(3px) saturate(2.1) brightness(1.08);backdrop-filter:blur(3px) saturate(2.1) brightness(1.08);scale:calc(1.06*var(--sx,1)) calc(1.16/var(--sx,1))}
+.seg.press .thumb{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.4));-webkit-backdrop-filter:blur(3px) saturate(2.1) brightness(1.08);backdrop-filter:blur(3px) saturate(2.1) brightness(1.08);scale:calc(1.03*var(--sx,1)) calc(1.14/var(--sx,1))}
 [data-theme=dark] .seg .thumb{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.14))}
 [data-theme=dark] .seg.press .thumb{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08))}
 .seg.sm button{min-height:32px;font-size:13px}
@@ -191,7 +191,7 @@ function Seg(el,start,on){
   el.addEventListener('pointermove',e=>{
     if(id===null){el.style.cursor=onGlass(e)?'grab':'pointer';return}   // hover (mouse): kursor tangan hanya di atas glass
     if(e.pointerId!==id||!grab)return;                                   // di luar glass: tidak bisa digeser
-    const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;el.classList.add('drag');el.style.setProperty('--x',rb(p0+dx)+'px');const t=performance.now(),v=(e.clientX-lx)/Math.max(t-lt,1);lx=e.clientX;lt=t;el.style.setProperty('--sx',1+Math.min(Math.abs(v)*.1,.14));clearTimeout(sxT);sxT=setTimeout(()=>el.style.removeProperty('--sx'),70)});
+    const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;el.classList.add('drag');el.style.setProperty('--x',rb(p0+dx)+'px');const t=performance.now(),v=(e.clientX-lx)/Math.max(t-lt,1);lx=e.clientX;lt=t;el.style.setProperty('--sx',1+Math.min(Math.abs(v)*.08,.08));clearTimeout(sxT);sxT=setTimeout(()=>el.style.removeProperty('--sx'),70)});
   const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let i=cur;const pv=cur;
     if(ok){if(grab)i=mv?Math.round(parseFloat(el.style.getPropertyValue('--x'))/sw):at(e.clientX);
            else if(Math.abs(e.clientX-x0)<8)i=at(e.clientX)}            // tap di luar glass: pindah ke segmen yang di-tap
