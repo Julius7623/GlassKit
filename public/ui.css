@@ -97,3 +97,21 @@ button:active{transform:none}.mb:active{scale:none}
 
 /* HP: blur per kartu format berat; kartu tetap semi-transparan tanpa blur */
 @media(max-width:520px),(hover:none){.fmt{-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Tipografi: font sistem Apple (SF Pro di iPhone/Mac), satu keluarga untuk semua teks; angka rata (tabular) */
+:root{--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:var(--font)}
+body,button,input,textarea,select{font-family:var(--font)}
+body{font-variant-numeric:tabular-nums}
+h1{font-weight:700;letter-spacing:-.035em}
+.chip,.tag{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600}
+.fmt b em,.m i,.dur{letter-spacing:0}
+.credit{font-size:13px}.credit b{font:600 13px var(--font);letter-spacing:0}
+
+/* Tombol: satu bahasa (kapsul, 50px, 17px/600). Utama = terisi, sekunder = kaca */
+.btn,.ghost{height:50px;border-radius:999px;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.bar{border-radius:32px}
+
+/* Arti gerak: lencana centang membesar = unduhan sudah dimulai (selesai), lalu hilang sendiri */
+.fmt.ok{box-shadow:inset 0 0 0 1.5px var(--ac)}
+.fmt.ok::after{content:"\2713";position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:var(--act);font:700 13px var(--font);border:2px solid var(--bg);animation:okpop .5s var(--spring)}
+@keyframes okpop{from{scale:.4;opacity:0}}

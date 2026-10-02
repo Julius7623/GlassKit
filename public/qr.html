@@ -18,8 +18,8 @@ try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
 <link rel="stylesheet" href="/base.css?v=4">
-<link rel="stylesheet" href="/ui.css?v=6">
-<script src="/shell.js?v=8" defer></script>
+<link rel="stylesheet" href="/ui.css?v=7">
+<script src="/shell.js?v=9" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -112,13 +112,13 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </header>
 <main>
   <h1>Create a QR code</h1>
-  <p class="sub">Type or paste something, and the code updates instantly. Nothing is uploaded.</p>
+  <p class="sub">Type or paste anything. The code updates as you go, and nothing leaves your device.</p>
   <div class="qrgrid">
   <div class="ctl" id="ctl">
   <div class="seg" id="tabs" role="tablist" aria-label="QR code type">
     <span class="thumb"></span>
     <button type="button" role="tab" data-m="text">Link or text</button>
-    <button type="button" role="tab" data-m="wifi">WiFi</button>
+    <button type="button" role="tab" data-m="wifi">Wi-Fi</button>
     <button type="button" role="tab" data-m="wa">WhatsApp</button>
   </div>
   <div class="glass form" id="form"></div>
