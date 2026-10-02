@@ -17,9 +17,9 @@
 try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
-<link rel="stylesheet" href="/base.css?v=5">
+<link rel="stylesheet" href="/base.css?v=6">
 <link rel="stylesheet" href="/ui.css?v=10">
-<script src="/shell.js?v=18" defer></script>
+<script src="/shell.js?v=19" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
 .seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
@@ -33,7 +33,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 .seg.sm{width:100%;max-width:340px;margin:16px 0 0}
 /* Lensa kaca: label di dalam kaca dibelokkan di tepinya (refraksi), ada kilau tepi. Kaca di atas label asli; latar lensa menutup label asli di bawahnya */
 .seg.has-lens .thumb{z-index:2;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-.lensclip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;filter:url(#lens)}
+.lensclip{position:absolute;inset:0;border-radius:inherit;overflow:hidden}
 .lens{position:absolute;top:0;bottom:0;left:0;width:calc(var(--n)*100%);display:flex;color:var(--t);background:linear-gradient(180deg,#fff,#efeff3);translate:calc(-1*var(--x,calc(var(--i,0)*100%/var(--n))));transition:translate .75s var(--spring)}
 .lens span{flex:1 1 0;display:grid;place-items:center;font-size:15px;font-weight:600;white-space:nowrap}
 .seg.sm .lens span{font-size:13px}
@@ -173,7 +173,13 @@ function Seg(el,start,on){
   let cur=start,id=null,x0=0,p0=0,sw=0,mv=false,grab=false;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   el.style.setProperty('--n',n);
-  if(window.CSS&&CSS.supports('filter','url(#lens)')){th.innerHTML='<div class="lensclip"><div class="lens" aria-hidden="true">'+bs.map(b=>'<span>'+b.textContent+'</span>').join('')+'</div></div>';el.classList.add('has-lens')}   // lensa: salinan label di dalam kaca, dibelokkan di tepinya
+  if(window.CSS&&CSS.supports('filter','url(#lens)')){th.innerHTML='<div class="lensclip"><div class="lens" aria-hidden="true">'+bs.map(b=>'<span>'+b.textContent+'</span>').join('')+'</div></div>';el.classList.add('has-lens');
+  // filter per slider dengan ukuran piksel nyata (peta distorsi harus pas selebar kaca, kalau tidak sisi kanan tidak terdistorsi dan muncul pita abu)
+  const NS='http://www.w3.org/2000/svg',fid='lens'+(Seg.k=(Seg.k||0)+1),sv=document.createElementNS(NS,'svg');
+  sv.setAttribute('width','0');sv.setAttribute('height','0');sv.style.position='absolute';
+  sv.innerHTML='<filter id="'+fid+'" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage href="'+document.querySelector('#lens feImage').getAttribute('href')+'" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="12" xChannelSelector="R" yChannelSelector="G"/></filter>';
+  el.append(sv);th.firstChild.style.filter='url(#'+fid+')';
+  const fit=()=>{const im=sv.querySelector('feImage');im.setAttribute('width',th.offsetWidth);im.setAttribute('height',th.offsetHeight)};fit();new ResizeObserver(fit).observe(th)}   // lensa: salinan label di dalam kaca, dibelokkan di tepinya
   const paint=()=>{el.style.setProperty('--i',cur);cur===0||cur===n-1?el.setAttribute('data-edge',''):el.removeAttribute('data-edge');bs.forEach((b,i)=>{b.setAttribute(A,i===cur);b.tabIndex=i===cur?0:-1})};
   const set=i=>{i=clamp(i,0,n-1);const ch=i!==cur,d=Math.abs(i-cur);cur=i;paint();if(ch){GlassKit.jelly(th,d,i===0?'left':i===n-1?'right':'center');on(i)}};
   let lx=0,lt=0,sxT=0;const rb=v=>{const mx=(n-1)*sw,q=o=>6*(1-Math.exp(-o/30));return v<0?-q(-v):v>mx?mx+q(v-mx):v};   // rubber band di ujung
