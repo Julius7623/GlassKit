@@ -106,3 +106,10 @@ GlassKit.blend=(el,txt,on=true)=>{
   g.animate([{opacity:1,filter:'blur(0)',translate:'0 0'},{opacity:0,filter:'blur(3px)',translate:'0 -4px'}],{duration:170,easing:'ease-out',fill:'forwards'}).onfinish=()=>{g.remove();if(pos==='static')el.style.position=''};
  },{fade:false});
 }})();
+
+(()=>{ // jelly: kaca memanjang searah gerak lalu memantul dan mengendap, seperti benda cair yang berhenti. Maknanya "sudah mendarat di pilihan ini"
+const RM=matchMedia('(prefers-reduced-motion:reduce)');
+GlassKit.jelly=(el,d)=>{if(!el||!el.animate||RM.matches)return;const s=Math.min(1+.12*d,1.3),k=s-1,f=x=>x.toFixed(3);
+ el.animate([{transform:'scale(1,1)'},{transform:`scale(${f(s)},${f(1/Math.sqrt(s))})`,offset:.26},{transform:`scale(${f(1-k*.35)},${f(1+k*.5)})`,offset:.52},{transform:`scale(${f(1+k*.18)},${f(1-k*.1)})`,offset:.76},{transform:'scale(1,1)'}],{duration:640,easing:'cubic-bezier(.3,.6,.4,1)'})};
+new MutationObserver(()=>{const k=document.querySelector('.sw .kn');if(k&&document.documentElement.classList.contains('ready'))GlassKit.jelly(k,1)}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+})();
