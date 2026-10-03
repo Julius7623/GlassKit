@@ -17,8 +17,8 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from supported links"><meta property="og:description" content="Download public videos from Instagram, TikTok, Facebook, and X (formerly Twitter) when the link is supported. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=8">
-<link rel="stylesheet" href="/ui.css?v=14">
-<script src="/shell.js?v=25" defer></script>
+<link rel="stylesheet" href="/ui.css?v=15">
+<script src="/shell.js?v=26" defer></script>
 
 </head>
 <body data-own-theme>
@@ -35,7 +35,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
   <ol class="steps" id="st" aria-label="Steps"><li><i>1</i><span>Paste link</span></li><li><i>2</i><span>Choose format</span></li><li><i>3</i><span>Download</span></li></ol>
   <div class="glass bar">
     <input id="u" type="url" enterkeyhint="go" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="url" aria-label="URL" autocomplete="off">
-    <button class="clr hide" id="x" type="button" aria-label="Clear link"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <button class="clr hide" id="x" data-fast type="button" aria-label="Clear link"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <span class="pill hide" id="bd" role="img"></span>
     <button class="ghost" id="p" data-i="paste"></button>
     <button class="btn" id="go" data-i="go"></button>

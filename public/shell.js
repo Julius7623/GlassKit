@@ -59,7 +59,7 @@ const hold=e=>{e.classList.add('holding');go(e,[{scale:1,opacity:1},{scale:.965,
 const arm=e=>{e.classList.add('armed');go(e,[{scale:.965,opacity:.88},{scale:.94,opacity:.76}],{duration:380,easing:S,fill:'forwards'})};
 const TAP=[{scale:.94,opacity:.8},{scale:1.035,opacity:1,offset:.5},{scale:1,opacity:1}];
 const end=c=>{if(!el)return;clearTimeout(t1);clearTimeout(t2);const e=el,seen=e.classList.contains('holding'),q=quiet;el=null;e.classList.remove('holding','armed');
- if(c==='cancel'&&!seen||q&&c==='tapped')return swap(e);
+ if(c==='cancel'&&!seen||q&&c==='tapped'||c==='tapped'&&e.hasAttribute('data-fast'))return swap(e); // tombol yang menghilang sendiri tidak diberi pantulan, supaya transisi keluarnya terlihat
  if(c==='tapped')swap(e,TAP,{duration:450,easing:S});
  else swap(e,[{scale:.95,opacity:.8},{scale:1,opacity:1}],{duration:400,easing:E})};
 D.addEventListener('scroll',()=>{ls=Date.now();end('cancel')},true);
@@ -70,7 +70,9 @@ D.addEventListener('pointerdown',ev=>{end();if(ev.button>0)return;const b=ev.tar
  t1=setTimeout(()=>el&&hold(el),touch?130:40);t2=setTimeout(()=>el&&arm(el),touch?600:450)});
 D.addEventListener('pointermove',ev=>{if(!el)return;
  if(Math.hypot(ev.clientX-x0,ev.clientY-y0)>(touch?6:10)||(!touch&&!el.contains(ev.target)))end('cancel')});
-D.addEventListener('pointerup',ev=>{if(el)end(el.contains(ev.target)?'tapped':'cancel')});
+D.addEventListener('pointerup',ev=>{if(!el)return;const e=el,ok=el.contains(ev.target);end(ok?'tapped':'cancel');
+ if(ok&&touch&&e.hasAttribute('data-fast')&&!e.disabled){e.click();e._ft=Date.now()}}); // aksi langsung saat jari diangkat, tanpa menunggu click
+D.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-fast]');if(b&&b._ft&&ev.detail&&Date.now()-b._ft<700){ev.stopImmediatePropagation();ev.preventDefault()}},true);
 ['pointercancel','contextmenu','blur'].forEach(n=>addEventListener(n,()=>end('cancel')));
 const pick=ev=>{const b=ev.target.closest&&ev.target.closest(SEL);return b&&!b.disabled&&b.getAttribute('aria-disabled')!=='true'&&!b.closest('.sw,.seg')?b:null};
 D.addEventListener('keydown',ev=>{if(ev.repeat||ev.key!=='Enter'&&ev.key!==' ')return;const b=pick(ev);if(b)hold(b)});
@@ -133,7 +135,7 @@ const enhance=i=>{
  i.replaceWith(w);w.append(i,b);
  const sync=()=>w.classList.toggle('has',!!i.value&&!i.disabled);
  i.addEventListener('input',sync);i.addEventListener('change',sync);
- b.addEventListener('pointerdown',e=>e.preventDefault()); // keyboard tetap terbuka
+ b.addEventListener('mousedown',e=>e.preventDefault());b.setAttribute('data-fast',''); // keyboard tetap terbuka
  b.addEventListener('click',()=>{i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));i.focus({preventScroll:true})});
  sync()};
 const scan=r=>(r.matches&&r.matches('input')?[r]:[...(r.querySelectorAll?r.querySelectorAll('input'):[])]).forEach(enhance);
