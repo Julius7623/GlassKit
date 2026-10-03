@@ -146,7 +146,7 @@ async function load(){
     if(c&&Date.now()-c.t<3e5)d=c.d; // link sama dalam 5 menit: tanpa permintaan baru ke server
     else{const r=await fetch('/api/info?url='+encodeURIComponent(url));d=await r.json();
       if(!r.ok)throw Object.assign(Error(d.error),{status:r.status,code:d.code});infoCache.set(url,{d,t:Date.now()})}
-    cur=d;show(d);remember(url,d.title);
+    cur=d;cur.src=url;show(d);remember(url,d.title);
   }catch(e){fail(e)}finally{done()}
 }
 
@@ -194,7 +194,7 @@ out.onclick=async ev=>{
   const b=ev.target.closest('.fmt');
   if(out.dataset.busy){if(b&&b.getAttribute('aria-disabled')==='true')say(t('wait2'));return}
   if(!b)return;
-  out.dataset.busy=1;
+  out.dataset.busy=1;syncBack();
   // semua opsi lain diredupkan + kolom link dikunci: jelas bahwa sekarang harus menunggu
   out.querySelectorAll('.fmt').forEach(x=>{if(x!==b)x.setAttribute('aria-disabled','true')});lock(true);
   const {f,k,e,h}=b.dataset,old=b.innerHTML,t0=Date.now();let pc=0;
@@ -202,7 +202,7 @@ out.onclick=async ev=>{
   M(b,()=>{b.innerHTML=`<b>${t('prep')}<em class="el">0:00</em></b><span class="pgb"><i></i></span><span class="hint">Keep this page open.</span>`},{fade:false});
   const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=b.querySelector('.el');if(!el)return;el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+(pc?' · '+pc+'%':'');if(s===12)b.querySelector('.hint').textContent='Larger files can take a minute or more. Keep this page open.'},1000);
   try{
-    const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}&h=${h||0}&i=${(cur&&cur.item)||1}`),j=await r.json();
+    const r=await fetch(`/api/prepare?url=${encodeURIComponent((cur&&cur.src)||u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}&h=${h||0}&i=${(cur&&cur.item)||1}`),j=await r.json();
     if(!r.ok)throw Object.assign(Error(j.error),{status:r.status,code:j.code});
     const d=await poll(j.id,p=>{pc=p;const i=b.querySelector('.pgb i');if(i&&p>0){i.style.animation='none';i.style.transform='none';i.style.width=p+'%';i.style.transition='width .6s'}});
     const go=()=>{const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;document.body.append(l);l.click();l.remove()};
@@ -210,11 +210,11 @@ out.onclick=async ev=>{
     else{go();stp(3);say(t('started')+MB(d.size,true))}
     b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),2600);
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
-  finally{clearInterval(tick);delete out.dataset.busy;out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');M(b,()=>{b.innerHTML=old},{fade:false});b.disabled=false}
+  finally{clearInterval(tick);delete out.dataset.busy;syncBack();out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');M(b,()=>{b.innerHTML=old},{fade:false});b.disabled=false}
 };
 
 
-u.oninput=()=>{const b=$('#bd'),v=u.value.trim(),x=site(v);
+u.oninput=()=>{keepUrl=u.value;const b=$('#bd'),v=u.value.trim(),x=site(v);
   if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',disp(x));b.title=disp(x);b.classList.remove('hide')}else b.classList.add('hide');
   xb.classList.toggle('hide',!v);gh.classList.toggle('hide',!!v)};
 xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put(emptyHTML());u.focus()};
@@ -235,8 +235,8 @@ function showReady(){
   rdy.querySelector('small').textContent=pend.name+(pend.size?' · '+MB(pend.size,true):'');
   void rdy.offsetWidth;rdy.classList.add('on')}
 function hideReady(){if(rdy){const r=rdy;rdy=null;r.classList.remove('on');setTimeout(()=>r.remove(),600)}}
-function hold(p){pend=p;clearTimeout(hold.t);hold.t=setTimeout(()=>{pend=null;hideReady();document.title=baseTitle},9*60e3);document.title='\u2713 File ready \u00b7 '+baseTitle;showReady()}
-function save(){if(!pend)return;const p=pend;pend=null;clearTimeout(hold.t);hideReady();document.title=baseTitle;p.go();stp(3);say(t('started')+MB(p.size,true))}
+function hold(p){pend=p;syncBack();clearTimeout(hold.t);hold.t=setTimeout(()=>{pend=null;syncBack();hideReady();document.title=baseTitle},9*60e3);document.title='\u2713 File ready \u00b7 '+baseTitle;showReady()}
+function save(){if(!pend)return;const p=pend;pend=null;syncBack();clearTimeout(hold.t);hideReady();document.title=baseTitle;p.go();stp(3);say(t('started')+MB(p.size,true))}
 function ask(kind,go){
   const rd=kind==='ready',d=document.createElement('div');d.className='dlg';d.setAttribute('role','alertdialog');d.setAttribute('aria-modal','true');
   d.innerHTML=`<div class="box"><h2>${rd?"Your file isn't saved yet":'Leave while preparing?'}</h2><p>${rd?"It's ready but hasn't been downloaded. If you leave now, it will be lost.":"Your file is still being prepared. If you leave now, you'll need to start again."}</p><div class="eb"><button class="btn" type="button" data-a="stay">${rd?'Download':'Stay on page'}</button><button class="ghost" type="button" data-a="leave">${rd?'Leave anyway':'Leave'}</button></div></div>`;
@@ -254,9 +254,25 @@ document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest
 // refresh, tutup tab, atau mengetik alamat lain
 addEventListener('beforeunload',e=>{if(guard()){e.preventDefault();e.returnValue=''}});
 // kembali ke tab ini: ingatkan apa yang masih menunggu
-document.addEventListener('visibilitychange',()=>{if(document.hidden)return;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;restoreUrl();
   if(pend){showReady();rdy.classList.remove('nudge');void rdy.offsetWidth;rdy.classList.add('nudge')}
   else if(out.dataset.busy)say('Still preparing. Keep this page open.',3500)});
+// geser-kembali / tombol back: tambah satu entri riwayat selama ada yang harus dijaga, lalu tanyakan sebelum benar-benar pergi
+var keepUrl;let gEntry=false,ignorePop=0;
+function syncBack(){
+  if(guard()){if(!gEntry){history.pushState({gk:1},'');gEntry=true}}
+  else if(gEntry){gEntry=false;if(history.state&&history.state.gk){ignorePop++;history.back()}}}
+addEventListener('popstate',()=>{
+  if(ignorePop){ignorePop--;return}
+  if(!gEntry)return;
+  const k=guard();if(!k){gEntry=false;return}
+  history.pushState({gk:1},'');
+  ask(k,()=>{gEntry=false;history.go(-2)})});
+// kembali ke halaman ini dari riwayat: Safari mengosongkan kolom link (autocomplete=off), kembalikan isinya
+addEventListener('pageshow',e=>{if(!e.persisted)return;leaving=0;gEntry=!!(history.state&&history.state.gk);
+  restoreUrl();[60,250,700].forEach(ms=>setTimeout(restoreUrl,ms))}); // Safari bisa mengosongkan kolom sesudah pageshow, jadi coba beberapa kali
+// isi kolom link hanya dikembalikan kalau kosong DAN hasil lama masih tampil, supaya tidak menimpa ketikan baru
+function restoreUrl(){const k=(cur&&cur.src)||'';if(k&&!u.value){u.value=k;u.oninput()}}
 const q=new URLSearchParams(location.search),pre=q.get('url')||q.get('text');
 if(pre){u.value=pickUrl(pre)||pre.trim();u.oninput();load()}
 </script>
