@@ -22,7 +22,7 @@ await app.register(fastifyStatic, {
 });
 
 // Halaman HTML: isi __ORIGIN__ dengan domain asli (untuk canonical, Open Graph, sitemap)
-const PAGES = { '/': 'index', '/grab': 'grab', '/qr': 'qr', '/legal': 'legal' };
+const PAGES = { '/': 'index', '/grab': 'grab', '/qr': 'qr', '/legal': 'legal', '/how': 'how' };
 const html = Object.fromEntries(Object.entries(PAGES).map(([p, f]) => [p, readFileSync(join(PUB, f + '.html'), 'utf8')]));
 const origin = q => `${q.protocol}://${q.hostname}`;
 for (const p of Object.keys(PAGES))
