@@ -37,9 +37,9 @@ a.card:hover .chip{translate:3px 0}
 /* Mobile: Paste tetap terlihat, tombol di baris sendiri agar mudah dijangkau jempol */
 @media(max-width:520px){
  .bar{flex-wrap:wrap}
- .bar input{flex:1 1 100%;padding-right:100px}
- .bar .clr{position:absolute;top:10px;right:8px}
- .bar .pill{position:absolute;top:14px;right:52px}
+ .bar input{flex:1 1 100%;padding-right:120px}
+ .bar .clr{position:absolute;top:15px;right:8px}
+ .bar .pill{position:absolute;top:14px;right:76px}
  .bar .ghost,.bar .btn{display:block;order:5}
  .bar .btn,.bar .ghost:not(.hide){flex:1 1 0;max-width:none}
  .grid{grid-template-columns:1fr}
@@ -155,3 +155,17 @@ html.theming :where(button:not(.sw),a,.glass,.fmt,.rc,.card,.seg,.seg *,.ico,.dr
 /* status bar dan bilah bawah Safari mengikuti tema pilihan, bukan tema sistem */
 html[data-theme=dark]{color-scheme:dark}
 html[data-theme=light]{color-scheme:light}
+
+/* Tombol hapus berupa teks "Clear": tidak tertukar dengan ikon platform X */
+.bar .clr{position:relative;width:auto;height:34px;max-width:90px;padding:0 12px;border-radius:99px;background:var(--fill);color:var(--t);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap}
+.bar .clr::before,.bar .clr svg{display:none}
+.bar .clr::after{content:"Clear"}
+.bar .clr.hide{max-width:0;padding:0;margin-left:-8px}
+
+/* Format: pilihan terbaik dulu, sisanya dilipat */
+.more{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:12px;border-radius:14px;background:var(--fill);font-size:15px;font-weight:600}
+.more i{width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;rotate:45deg;translate:0 -2px;transition:rotate .35s var(--spring),translate .35s var(--spring)}
+.more[aria-expanded=true] i{rotate:225deg;translate:0 2px}
+.mx{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--e)}
+.mx>div{min-height:0;overflow:hidden}
+.mx.open{grid-template-rows:1fr}

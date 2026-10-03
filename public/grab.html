@@ -17,7 +17,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from supported links"><meta property="og:description" content="Download public videos from Instagram, TikTok, Facebook, and X (formerly Twitter) when the link is supported. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=8">
-<link rel="stylesheet" href="/ui.css?v=12">
+<link rel="stylesheet" href="/ui.css?v=13">
 <script src="/shell.js?v=25" defer></script>
 
 </head>
@@ -46,7 +46,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </main>
 <div class="glass" id="t" role="status" aria-live="polite"></div>
 <script>
-const L={en:{doc:'GlassGrab - Download videos from supported links',h1:'Download videos from supported links',sub:'Instagram, TikTok, Facebook, and X (formerly Twitter). Public videos only, and some links may not work.',ph:'Paste a video link',paste:'Paste',go:'Get video',empty:'Paste a public video link to get started.',foot:'For content you own, are licensed to use, or need for personal use. Links and files are never stored.',av:'Video with audio',avh:'Plays on most devices',vo:'Video only',voh:'Best audio is added automatically',ao:'Audio only',aoh:'Just the sound',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'Size unknown',prep:'Preparing…',started:'Download started · ',clip:'Clipboard access is off. Paste the link manually.',look:'Finding your video…',wait:'Fetching details and formats. This usually takes a few seconds.',wait2:'One moment. Your file is still being prepared.',slow:'Still working. The server is waking up, which can take a moment.'}};
+const L={en:{doc:'GlassGrab - Download videos from supported links',h1:'Download videos from supported links',sub:'Instagram, TikTok, Facebook, and X (formerly Twitter). Public videos only, and some links may not work.',ph:'Paste a video link',paste:'Paste',go:'Get video',empty:'Paste a public video link to get started.',foot:'For content you own, are licensed to use, or need for personal use. Links and files are never stored.',rec:'Recommended',rech:'The best picks for most people',more:'More formats',less:'Fewer formats',av:'Video with audio',avh:'Plays on most devices',vo:'Video only',voh:'Best audio is added automatically',ao:'Audio only',aoh:'Just the sound',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'Size unknown',prep:'Preparing…',started:'Download started · ',clip:'Clipboard access is off. Paste the link manually.',look:'Finding your video…',wait:'Fetching details and formats. This usually takes a few seconds.',wait2:'One moment. Your file is still being prepared.',slow:'Still working. The server is waking up, which can take a moment.'}};
 const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const lang='en';let cur=null,lastErr=null;
@@ -157,15 +157,20 @@ function show(d){
   const best=vid[0],compat=vid.find(f=>f.vc==='H.264'&&f.ext==='mp4'),small=av.filter(f=>f.size).sort((x,y)=>x.size-y.size)[0];
   const tag=f=>f===best?t('best'):f===compat?t('compat'):f===small?t('small'):'';
   const rate=n=>n>=1000?(n/1e3).toFixed(1)+' Mbps':n+' kbps';
-  const card=(f,i)=>{
+  const card=(f,i,lbl)=>{
     const main=f.h?f.h+'p'+(f.fps>30?f.fps:''):f.ext.toUpperCase(),end=f.h?f.ext.toUpperCase():(f.br?rate(f.br):t('aud').toUpperCase());
     const chips=[[f.vc,f.ac].filter(x=>x&&x!==f.ext.toUpperCase()).join(' + '),f.h&&f.br?rate(f.br):'',MB(f.size,f.ex)].filter(Boolean).map(x=>`<i>${esc(x)}</i>`).join('')+(f.hdr?'<i class="hd">HDR</i>':'');
-    return `<button class="fmt" style="--n:${Math.min(i,10)}" data-f="${esc(f.id)}" data-k="${f.k}" data-e="${f.ext}" data-h="${f.h}">${tag(f)?`<span class="tag">${tag(f)}</span>`:''}<b>${main}<em>${end}</em></b><span class="m">${chips}</span></button>`};
-  const sec=(h,hint,l)=>l.length?`<div class="sh"><h2>${h}</h2><span>${hint}</span></div><div class="grid">${l.map(card).join('')}</div>`:'';
+    return `<button class="fmt" style="--n:${Math.min(i,10)}" data-f="${esc(f.id)}" data-k="${f.k}" data-e="${f.ext}" data-h="${f.h}">${(lbl||tag(f))?`<span class="tag">${lbl||tag(f)}</span>`:''}<b>${main}<em>${end}</em></b><span class="m">${chips}</span></button>`};
+  const sec=(h,hint,l)=>l.length?`<div class="sh"><h2>${h}</h2><span>${hint}</span></div><div class="grid">${l.map((f,i)=>card(f,i)).join('')}</div>`:'';
+  const m0=av[0]||vid[0],picks=[],add=(f,l)=>f&&!picks.some(p=>p[0]===f)&&picks.push([f,l]);
+  add(m0,m0===best?t('best'):t('av'));add(compat,t('compat'));add(a[0],t('ao'));
+  const g=f=>!picks.some(p=>p[0]===f),rest=d.formats.filter(g).length;
   const src=site(u.value.trim()),n=d.formats.length;
   const sum=[best&&best.h?t('upto')+best.h+'p':'',n===1?t('one'):n+t('many')].filter(Boolean).map(x=>`<i>${esc(x)}</i>`).join('');
   put(`<div class="glass pv"><div class="th">${d.thumb?`<img src="${esc(d.thumb)}" alt="" referrerpolicy="no-referrer">`:''}${d.dur?`<span class="dur">${T(d.dur)}</span>`:''}</div><div class="info">${src?`<span class="src">${IC[src]||IC.Link}${esc(disp(src))}</span>`:''}<b>${esc(d.title)}</b>${d.who?`<small>${esc(d.who)}</small>`:''}<span class="m">${sum}</span></div></div>`
-    +sec(t('av'),t('avh'),av)+sec(t('vo'),t('voh'),v)+sec(t('ao'),t('aoh'),a));
+    +`<div class="sh"><h2>${t('rec')}</h2><span>${t('rech')}</span></div><div class="grid">${picks.map(([f,l],i)=>card(f,i,l)).join('')}</div>`
+    +(rest?`<button class="more" id="more" type="button" aria-expanded="false" aria-controls="mx"><span>${t('more')} · ${rest}</span><i></i></button><div class="mx" id="mx" inert><div>${sec(t('av'),t('avh'),av.filter(g))+sec(t('vo'),t('voh'),v.filter(g))+sec(t('ao'),t('aoh'),a.filter(g))}</div></div>`:''));
+  const mb=$('#more');if(mb)mb.onclick=()=>{const mx=$('#mx'),o=!mx.classList.contains('open');mx.classList.toggle('open',o);mx.inert=!o;mb.setAttribute('aria-expanded',o);mb.firstChild.textContent=o?t('less'):t('more')+' · '+rest};
 }
 
 // Menunggu server selesai menyiapkan file. Gangguan jaringan sesaat (sinyal HP, pindah aplikasi) tidak membatalkan unduhan.
