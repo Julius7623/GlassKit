@@ -1,7 +1,7 @@
 {
   "name": "GlassKit",
   "short_name": "GlassKit",
-  "description": "Free online tools for everyday files",
+  "description": "Free online tools: video downloader and QR code generator",
   "start_url": "/",
   "scope": "/",
   "display": "fullscreen",

@@ -9,8 +9,8 @@ vid:'<rect x="4" y="6" width="12" height="12" rx="3"/><path d="M16 11l4-2.500v7L
 qr:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2M14 19h2"/>',
 txt:'<path d="M5 6h14M12 6v13M9 19h6"/>'};
 const TOOLS=[
-{n:'GlassGrab',p:'/grab',d:'Download videos from any link',i:'dl',live:1},
-{n:'GlassQR',p:'/qr',d:'Create QR codes for links, Wi-Fi, and more',i:'qr',live:1},];
+{n:'GlassGrab',p:'/grab',d:'Download videos from supported links',i:'dl',live:1},
+{n:'GlassQR',p:'/qr',d:'Create QR codes for links, text, Wi-Fi, and WhatsApp',i:'qr',live:1},];
 const ico=k=>`<span class="ico"><svg viewBox="0 0 24 24">${P[k]}</svg></span>`;
 window.GlassKit={TOOLS,ico,cards(el){el.innerHTML=TOOLS.map((t,i)=>{const tag=t.live?'a':'div',h=t.live?` href="${t.p}"`:'';
  return `<${tag} class="glass card ${t.live?'live':'soon'}"${h} style="--n:${i}">${ico(t.i)}<b>${t.n}</b><p>${t.d}</p><span class="chip">${t.live?'Open':'Coming soon'}</span></${tag}>`}).join('')}};
