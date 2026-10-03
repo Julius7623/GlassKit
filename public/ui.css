@@ -71,7 +71,7 @@ button:active{transform:none}.mb:active{scale:none}
 /* Desktop (mouse): hover = "bisa diklik", tekan/tahan memakai efek yang sama dengan mobile */
 .btn{transition:transform .4s var(--sp),opacity .25s,translate .2s var(--e),box-shadow .2s}
 .ghost{transition:max-width .4s var(--e),padding .4s var(--e),margin .4s var(--e),opacity .25s,transform .4s var(--sp),translate .2s var(--e),box-shadow .2s}
-.mb,.dh .x,.px,.rc,.ci,.cc,.rch button{transition:background-color .2s,box-shadow .2s,opacity .25s,border-color .2s}
+.mb,.dh .x,.px,.rc,.ci,.cc,.rch button{transition:box-shadow .2s,opacity .25s,border-color .2s}
 .fmt{transition:transform .4s var(--sp),opacity .25s,box-shadow .25s}
 .card{transition:transform .4s var(--sp),box-shadow .3s}
 .ico{transition:scale .3s var(--spring)}
@@ -145,3 +145,13 @@ h1{font-size:clamp(28px,8.2vw,36px);letter-spacing:-.03em;margin:20px 0 6px}
 .steps:not(:has(.done)){display:none}
 .steps i{width:20px;height:20px;font-size:11px}
 .steps li{font-size:13px}
+
+/* ===== Pergantian tema: semua warna ikut satu kurva waktu, tanpa bagian yang tertinggal ===== */
+@property --card{syntax:"<color>";inherits:true;initial-value:#fff}
+@property --fill{syntax:"<color>";inherits:true;initial-value:rgba(120,120,128,.12)}
+html.ready{--tt:.55s cubic-bezier(.4,0,.2,1);transition:--bg var(--tt),--t var(--tt),--t2 var(--tt),--g var(--tt),--gb var(--tt),--hl var(--tt),--shc var(--tt),--ac var(--tt),--ac2 var(--tt),--act var(--tt),--rim1 var(--tt),--rim2 var(--tt),--card var(--tt),--fill var(--tt)}
+/* selama pergantian, transisi warna milik tiap komponen dimatikan agar tidak menunda warna yang sedang bergerak */
+html.theming :where(button:not(.sw),a,.glass,.fmt,.rc,.card,.seg,.seg *,.ico,.drawer){transition-property:none}
+/* status bar dan bilah bawah Safari mengikuti tema pilihan, bukan tema sistem */
+html[data-theme=dark]{color-scheme:dark}
+html[data-theme=light]{color-scheme:light}

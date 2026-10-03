@@ -116,3 +116,9 @@ GlassKit.jelly=(el,d,o='center')=>{if(!el||!el.animate||RM.matches)return;const 
  const a=el.animate([S(1,1,0),S(1+A,1-A*.55,.2),S(1-A*.5,1+A*.35,.42),S(1+A*.22,1-A*.12,.62),S(1-A*.08,1+A*.05,.8),S(1,1,1)],{duration:950});a.onfinish=a.oncancel=()=>{el.style.transformOrigin=''}};
 new MutationObserver(()=>{const k=document.querySelector('.sw .kn'),H=document.documentElement;if(k&&H.classList.contains('ready'))GlassKit.jelly(k,.5,H.dataset.theme==='dark'?'right':'left')}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
 })();
+(()=>{ // warna bilah browser mengikuti tema; kelas "theming" menandai saat pergantian berlangsung
+const R=document.documentElement,D=document;let t;
+const mk=n=>{let m=D.querySelector('meta[name='+n+']');if(!m){m=D.createElement('meta');m.name=n;D.head.append(m)}return m};
+const sync=()=>{const d=R.dataset.theme==='dark';mk('theme-color').content=d?'#000':'#f2f2f7';mk('color-scheme').content=d?'dark':'light'};
+new MutationObserver(()=>{R.classList.add('theming');clearTimeout(t);t=setTimeout(()=>R.classList.remove('theming'),650);sync()}).observe(R,{attributes:true,attributeFilter:['data-theme']});sync();
+})();
