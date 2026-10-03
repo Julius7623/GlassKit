@@ -3,7 +3,8 @@ import rateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import { spawn, execFile } from 'node:child_process';
 import { mkdtemp, rm, readdir, stat } from 'node:fs/promises';
-import { createReadStream, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { createReadStream, readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { brotliCompressSync, gzipSync, constants as Z } from 'node:zlib';
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -15,18 +16,37 @@ const app = Fastify({ logger: false, trustProxy: true }); // logger off: URL tid
 await app.register(rateLimit, { global: false, errorResponseBuilder: (_q, c) => ({ statusCode: 429, ec: 'RATE', error: 'Too Many Requests', message: `Terlalu banyak permintaan, coba lagi dalam ${Math.ceil(c.ttl / 1000)} detik` }) }); // hanya /api/* yang dibatasi; halaman & aset statis tidak
 const RL = max => ({ config: { rateLimit: { max, timeWindow: '1 minute' } } });
 const PUB = fileURLToPath(new URL('./public', import.meta.url));
+// Kompresi: berkas statis teks dibuat versi .br/.gz sekali saat start (tanpa dependensi baru), lalu disajikan lewat preCompressed
+const br = b => brotliCompressSync(b, { params: { [Z.BROTLI_PARAM_QUALITY]: 11, [Z.BROTLI_PARAM_SIZE_HINT]: b.length } });
+try {
+  for (const f of readdirSync(PUB).filter(f => /\.(css|js|webmanifest|svg)$/.test(f))) {
+    const p = join(PUB, f), t = statSync(p).mtimeMs;
+    for (const [ext, fn] of [['.br', br], ['.gz', b => gzipSync(b, { level: 9 })]])
+      if (!existsSync(p + ext) || statSync(p + ext).mtimeMs < t) writeFileSync(p + ext, fn(readFileSync(p)));
+  }
+} catch { /* folder tidak bisa ditulis: lewati, tetap jalan tanpa kompresi statis */ }
 await app.register(fastifyStatic, {
-  root: PUB, extensions: ['html'], index: false,
+  root: PUB, extensions: ['html'], index: false, preCompressed: true, cacheControl: false,
   setHeaders: (res, p) => res.setHeader('Cache-Control',
-    /\.(css|js)$/.test(p) ? 'public, max-age=3600' : /\.(png|webmanifest)$/.test(p) ? 'public, max-age=86400' : 'no-cache'),
+    /\.(css|js)(\.br|\.gz)?$/.test(p) ? 'public, max-age=86400, stale-while-revalidate=604800' : /\.(png|webmanifest)(\.br|\.gz)?$/.test(p) ? 'public, max-age=604800' : 'no-cache'),
 });
 
 // Halaman HTML: isi __ORIGIN__ dengan domain asli (untuk canonical, Open Graph, sitemap)
 const PAGES = { '/': 'index', '/grab': 'grab', '/qr': 'qr', '/legal': 'legal', '/how': 'how' };
 const html = Object.fromEntries(Object.entries(PAGES).map(([p, f]) => [p, readFileSync(join(PUB, f + '.html'), 'utf8')]));
 const origin = q => `${q.protocol}://${q.hostname}`;
+// HTML dikompres per domain dan disimpan di memori (dibatasi 200 entri supaya header Host palsu tidak menumpuk memori)
+const zcache = new Map();
+const enc = q => { const a = q.headers['accept-encoding'] || ''; return /\bbr\b/.test(a) ? 'br' : /\bgzip\b/.test(a) ? 'gzip' : ''; };
 for (const p of Object.keys(PAGES))
-  app.get(p, (q, r) => r.type('text/html; charset=utf-8').header('Cache-Control', 'no-cache').send(html[p].replaceAll('__ORIGIN__', origin(q))));
+  app.get(p, (q, r) => {
+    const o = origin(q), e = enc(q), body = html[p].replaceAll('__ORIGIN__', o);
+    r.type('text/html; charset=utf-8').header('Cache-Control', 'no-cache').header('Vary', 'Accept-Encoding');
+    if (!e) return r.send(body);
+    const k = p + '|' + o + '|' + e; let z = zcache.get(k);
+    if (!z) { z = e === 'br' ? br(Buffer.from(body)) : gzipSync(body, { level: 9 }); if (zcache.size < 200) zcache.set(k, z); }
+    return r.header('Content-Encoding', e).send(z);
+  });
 app.get('/sitemap.xml', (q, r) => r.type('application/xml').send(
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
   Object.keys(PAGES).map(p => `  <url><loc>${origin(q)}${p === '/' ? '' : p}</loc></url>`).join('\n') + `\n</urlset>\n`));
