@@ -114,6 +114,11 @@ TOO_BIG:{title:'This file is too large',why:"This server can't prepare files tha
 BAD_FORMAT:{title:"That format isn't available",why:'The list may be out of date.',tip:'Look up the link again and choose another format.'},
 BUSY:{title:'The server is busy',why:'Other downloads are running right now.',tip:'Try again in a few seconds.',retry:1},
 EXPIRED:{title:'This file has expired',why:'Prepared files are removed after a few minutes.',tip:'Tap the format again to prepare a new one.'},
+LOGIN:{title:'This platform wants a login',why:'Some posts (often on Instagram and Facebook) only open for signed-in accounts, or the platform is limiting our server.',tip:'Try a public post, or try again later.',retry:1},
+BLOCKED:{title:'The platform is blocking our server',why:'Some platforms block requests from data centers, even for public videos.',tip:'Try again later, or try a link from another platform.',retry:1},
+EXTRACT:{title:"Couldn't read this video",why:'The platform may have changed, or it blocked our request.',tip:'Try again in a few minutes. If it keeps failing, the platform is probably blocking this server.',retry:1},
+FORMAT:{title:"That format isn't available",why:'The platform changed its list since you looked it up.',tip:'Look up the link again and choose another format.',retry:1},
+TIMEOUT:{title:'This took too long',why:'The video may be very large, or the server is busy.',tip:'Try a lower quality, or try again.',retry:1},
 FAILED:{title:"Couldn't process this video",why:'Something went wrong while reading it.',tip:'Try again, or pick a different format.',retry:1}};
 const NET={title:'No connection',why:"We couldn't reach the server.",tip:'Check your internet connection, then try again.',retry:1};
 const GEN={title:'Something went wrong',why:'An unexpected error happened on our side.',tip:'Try again in a moment.',retry:1};
@@ -156,7 +161,7 @@ function show(d){
   const card=(f,i)=>{
     const main=f.h?f.h+'p'+(f.fps>30?f.fps:''):f.ext.toUpperCase(),end=f.h?f.ext.toUpperCase():(f.br?rate(f.br):t('aud').toUpperCase());
     const chips=[[f.vc,f.ac].filter(x=>x&&x!==f.ext.toUpperCase()).join(' + '),f.h&&f.br?rate(f.br):'',MB(f.size,f.ex)].filter(Boolean).map(x=>`<i>${esc(x)}</i>`).join('')+(f.hdr?'<i class="hd">HDR</i>':'');
-    return `<button class="fmt" style="--n:${Math.min(i,10)}" data-f="${esc(f.id)}" data-k="${f.k}" data-e="${f.ext}">${tag(f)?`<span class="tag">${tag(f)}</span>`:''}<b>${main}<em>${end}</em></b><span class="m">${chips}</span></button>`};
+    return `<button class="fmt" style="--n:${Math.min(i,10)}" data-f="${esc(f.id)}" data-k="${f.k}" data-e="${f.ext}" data-h="${f.h}">${tag(f)?`<span class="tag">${tag(f)}</span>`:''}<b>${main}<em>${end}</em></b><span class="m">${chips}</span></button>`};
   const sec=(h,hint,l)=>l.length?`<div class="sh"><h2>${h}</h2><span>${hint}</span></div><div class="grid">${l.map(card).join('')}</div>`:'';
   const src=site(u.value.trim()),n=d.formats.length;
   const sum=[best&&best.h?t('upto')+best.h+'p':'',n===1?t('one'):n+t('many')].filter(Boolean).map(x=>`<i>${esc(x)}</i>`).join('');
@@ -164,6 +169,20 @@ function show(d){
     +sec(t('av'),t('avh'),av)+sec(t('vo'),t('voh'),v)+sec(t('ao'),t('aoh'),a));
 }
 
+// Menunggu server selesai menyiapkan file. Gangguan jaringan sesaat (sinyal HP, pindah aplikasi) tidak membatalkan unduhan.
+async function poll(id,on){
+  const t0=Date.now();let miss=0;
+  for(;;){
+    await new Promise(r=>setTimeout(r,1200));
+    if(Date.now()-t0>25*60e3)throw Object.assign(Error('timeout'),{code:'TIMEOUT'});
+    let d;
+    try{const r=await fetch('/api/status/'+id,{cache:'no-store'});d=await r.json();
+      if(!r.ok)throw Object.assign(Error(d.error),{status:r.status,code:d.code});miss=0}
+    catch(e){if(e.code||++miss>10)throw e;continue}
+    if(d.st==='err')throw Object.assign(Error('failed'),{code:d.code});
+    if(d.st==='done')return d;
+    on(d.pct||0)}
+}
 out.onclick=async ev=>{
   const rc=ev.target.closest('.rc');
   if(rc){u.value=rc.dataset.u;u.oninput();return load()}
@@ -174,14 +193,15 @@ out.onclick=async ev=>{
   out.dataset.busy=1;
   // semua opsi lain diredupkan + kolom link dikunci: jelas bahwa sekarang harus menunggu
   out.querySelectorAll('.fmt').forEach(x=>{if(x!==b)x.setAttribute('aria-disabled','true')});lock(true);
-  const {f,k,e}=b.dataset,old=b.innerHTML,t0=Date.now();
+  const {f,k,e,h}=b.dataset,old=b.innerHTML,t0=Date.now();let pc=0;
   b.disabled=true;b.classList.add('busy');
   M(b,()=>{b.innerHTML=`<b>${t('prep')}<em class="el">0:00</em></b><span class="pgb"><i></i></span><span class="hint">Keep this page open.</span>`},{fade:false});
-  const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=b.querySelector('.el');if(!el)return;el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(s===12)b.querySelector('.hint').textContent='Larger files can take a minute or more. Keep this page open.'},1000);
+  const tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000),el=b.querySelector('.el');if(!el)return;el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+(pc?' · '+pc+'%':'');if(s===12)b.querySelector('.hint').textContent='Larger files can take a minute or more. Keep this page open.'},1000);
   try{
-    const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}`),d=await r.json();
-    if(!r.ok)throw Object.assign(Error(d.error),{status:r.status,code:d.code});
-    const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;l.click();
+    const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}&h=${h||0}&i=${(cur&&cur.item)||1}`),j=await r.json();
+    if(!r.ok)throw Object.assign(Error(j.error),{status:r.status,code:j.code});
+    const d=await poll(j.id,p=>{pc=p;const i=b.querySelector('.pgb i');if(i&&p>0){i.style.animation='none';i.style.transform='none';i.style.width=p+'%';i.style.transition='width .6s'}});
+    const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;document.body.append(l);l.click();l.remove();
     stp(3);say(t('started')+MB(d.size,true));b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),2600);
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
   finally{clearInterval(tick);delete out.dataset.busy;out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');M(b,()=>{b.innerHTML=old},{fade:false});b.disabled=false}
@@ -198,6 +218,7 @@ u.onkeydown=e=>{if(e.key==='Enter')load()};
 $('#go').onclick=load;
 $('#p').onclick=async()=>{try{const x=await navigator.clipboard.readText();u.value=pickUrl(x)||x.trim();u.oninput();load()}catch{say(t('clip'))}};
 theme(document.documentElement.dataset.theme);apply();put(emptyHTML());requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('ready')));
+if(/FBAN|FBAV|Instagram|TikTok|musical_ly|BytedanceWebview|Line\//i.test(navigator.userAgent))setTimeout(()=>say('Tip: browsers inside apps often block downloads. If nothing saves, open this page in Chrome or Safari.',8000),1500);
 const q=new URLSearchParams(location.search),pre=q.get('url')||q.get('text');
 if(pre){u.value=pickUrl(pre)||pre.trim();u.oninput();load()}
 </script>
