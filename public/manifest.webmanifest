@@ -4,9 +4,8 @@
   "description": "Free online tools for everyday files",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -33,5 +32,9 @@
       "text": "text",
       "url": "url"
     }
-  }
+  },
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ]
 }

@@ -14,8 +14,7 @@ const TOOLS=[
 const ico=k=>`<span class="ico"><svg viewBox="0 0 24 24">${P[k]}</svg></span>`;
 window.GlassKit={TOOLS,ico,cards(el){el.innerHTML=TOOLS.map((t,i)=>{const tag=t.live?'a':'div',h=t.live?` href="${t.p}"`:'';
  return `<${tag} class="glass card ${t.live?'live':'soon'}"${h} style="--n:${i}">${ico(t.i)}<b>${t.n}</b><p>${t.d}</p><span class="chip">${t.live?'Open':'Coming soon'}</span></${tag}>`}).join('')}};
-const TC={light:['#f5f5f5','#7b7b7b'],dark:['#0a0a0a','#050505']};
-const tcolor=()=>{const m=$('meta[name=theme-color]');if(!m)return;const b=D.body.classList;m.content=TC[R.dataset.theme==='dark'?'dark':'light'][(b.contains('menu')||b.contains('dim'))?1:0]};
+const tcolor=()=>{};
 GlassKit.dim=v=>{D.body.classList.toggle('dim',!!v);tcolor()};
 const here=location.pathname.replace(/\/$/,'').replace(/\.html$/,'')||'/';
 const item=(t,cur)=>{const live=t.live||t.home,tag=live?'a':'div';
@@ -36,7 +35,7 @@ function mount(){
 function themeInit(){
  const tsw=$('#tsw');if(!tsw||D.body.hasAttribute('data-own-theme'))return;
  const dark=()=>R.dataset.theme==='dark',st=v=>{try{localStorage.setItem('theme',v)}catch(e){}};
- const sync=()=>{tsw.classList.toggle('on',dark());tsw.setAttribute('aria-checked',dark());$('meta[name=theme-color]').content=dark()?'#0a0a0a':'#f5f5f5'};
+ const sync=()=>{tsw.classList.toggle('on',dark());tsw.setAttribute('aria-checked',dark())};
  const set=v=>{R.dataset.theme=v?'dark':'light';st(R.dataset.theme);sync()};
  let id=null,x0=0,p0=0,trv=0,mv=false;
  tsw.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;tsw.setPointerCapture(id);tsw.querySelector('.kn').getAnimations().forEach(a=>a.cancel());x0=e.clientX;trv=tsw.offsetWidth-44;p0=dark()?trv:0;mv=false;clearTimeout(tsw._t);tsw.classList.add('press')});

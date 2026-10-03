@@ -4,8 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up.">
-<meta name="theme-color" content="#f5f5f5">
+<meta name="description" content="Download videos from Instagram, TikTok, Facebook, X (formerly Twitter), and more. Free, no ads, no sign-up.">
 <title>GlassGrab - Download videos from any link</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23111'/%3E%3Cpath d='M16 7v13M10.500 15l5.500 5.500 5.500-5.500M9 25h14' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script>
@@ -15,11 +14,11 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <link rel="canonical" href="__ORIGIN__/grab">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
-<meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from YouTube, Instagram, TikTok, Facebook, X, and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
+<meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from any link"><meta property="og:description" content="Download videos from Instagram, TikTok, Facebook, X (formerly Twitter), and more. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=8">
 <link rel="stylesheet" href="/ui.css?v=10">
-<script src="/shell.js?v=21" defer></script>
+<script src="/shell.js?v=22" defer></script>
 
 </head>
 <body data-own-theme>
@@ -47,15 +46,14 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </main>
 <div class="glass" id="t" role="status" aria-live="polite"></div>
 <script>
-const L={en:{doc:'GlassGrab - Download videos from any link',h1:'Download videos from any link',sub:'Works with YouTube, Instagram, TikTok, Facebook, X, and thousands more. No ads, no sign-up.',ph:'Paste a video link',paste:'Paste',go:'Get video',empty:'Paste a link to get started.',foot:'For content you own, are licensed to use, or need for personal use. Links and files are never stored.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added automatically',ao:'Audio only',aoh:'Just the sound',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'Size unknown',prep:'Preparing…',started:'Download started · ',clip:'Clipboard access is off. Paste the link manually.',look:'Finding your video…',wait:'Fetching details and formats. This usually takes a few seconds.',wait2:'One moment. Your file is still being prepared.',slow:'Still working. The server is waking up, which can take a moment.'}};
+const L={en:{doc:'GlassGrab - Download videos from any link',h1:'Download videos from any link',sub:'Works with Instagram, TikTok, Facebook, X (formerly Twitter), and thousands more. No ads, no sign-up.',ph:'Paste a video link',paste:'Paste',go:'Get video',empty:'Paste a link to get started.',foot:'For content you own, are licensed to use, or need for personal use. Links and files are never stored.',av:'Video with audio',avh:'Plays everywhere',vo:'Video only',voh:'Best audio is added automatically',ao:'Audio only',aoh:'Just the sound',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'Size unknown',prep:'Preparing…',started:'Download started · ',clip:'Clipboard access is off. Paste the link manually.',look:'Finding your video…',wait:'Fetching details and formats. This usually takes a few seconds.',wait2:'One moment. Your file is still being prepared.',slow:'Still working. The server is waking up, which can take a moment.'}};
 const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
 const lang='en';let cur=null,lastErr=null;
 const t=k=>L[lang][k];
 const pickUrl=s=>{const m=String(s||'').match(/https?:\/\/[^\s<>"']+/i);return m?m[0].replace(/[)\]}.,;:!?]+$/,''):''}; // ambil link dari teks share (TikTok/IG menyalin teks + link)
-const sites={youtu:'YouTube',instagram:'Instagram',facebook:'Facebook','fb.':'Facebook',tiktok:'TikTok','x.com':'X',twitter:'X',reddit:'Reddit',vimeo:'Vimeo',twitch:'Twitch'};
+const sites={instagram:'Instagram',facebook:'Facebook','fb.':'Facebook',tiktok:'TikTok','x.com':'X',twitter:'X',reddit:'Reddit',vimeo:'Vimeo',twitch:'Twitch'};
 const IC={
-YouTube:'<svg viewBox="0 0 24 24"><rect x="1.5" y="5" width="21" height="14" rx="4.2" fill="#f03"/><path d="M10 9l5.200 3-5.200 3z" fill="#fff"/></svg>',
 Instagram:'<svg viewBox="0 0 24 24"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#feda75"/><stop offset=".35" stop-color="#fa7e1e"/><stop offset=".65" stop-color="#d62976"/><stop offset="1" stop-color="#4f5bd5"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="6" fill="url(#ig)"/><rect x="6.2" y="6.2" width="11.6" height="11.6" rx="3.800" fill="none" stroke="#fff" stroke-width="1.700"/><circle cx="12" cy="12" r="2.800" fill="none" stroke="#fff" stroke-width="1.700"/><circle cx="16.100" cy="7.900" r=".9" fill="#fff"/></svg>',
 Facebook:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1877f2"/><path d="M13.500 22v-7.600h2.500l.4-3h-2.900V9.600c0-.9.300-1.500 1.500-1.500h1.500V5.400c-.3 0-1.200-.1-2.200-.1-2.200 0-3.700 1.300-3.700 3.800v2.300H8v3h2.600V22z" fill="#fff"/></svg>',
 X:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="6" fill="#000" stroke="#fff" stroke-opacity=".3"/><path d="M7 6.500l10 11M17 6.500L7 17.500" stroke="#fff" stroke-width="1.900" stroke-linecap="round"/></svg>',
@@ -64,6 +62,7 @@ Reddit:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff4500"/>
 Vimeo:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="6" fill="#1ab7ea"/><path d="M6.500 10l1 1c1-.8 1.700-.5 2 .5l1.200 4.300c.4 1.200 1.200 1.200 2.200.3 1.800-1.500 3.300-3.300 3.400-5 .1-1.500-1-2-2.100-1.700-1 .3-1.700 1-2 2.200" fill="none" stroke="#fff" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 Twitch:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="6" fill="#9146ff"/><path d="M6.500 5.500h11v7.500l-3 3h-2.500l-2 2v-2H6.500z" fill="#fff"/><path d="M11 8.500v3M14.500 8.500v3" stroke="#9146ff" stroke-width="1.500" stroke-linecap="round"/></svg>',
 Link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.700 0l3-3a4 4 0 0 0-5.700-5.700l-1 1M14 10a4 4 0 0 0-5.700 0l-3 3a4 4 0 0 0 5.700 5.700l1-1"/></svg>'};
+const disp=s=>s==='X'?'X (formerly Twitter)':s;
 const site=s=>(Object.entries(sites).find(([k])=>s.includes(k))||[])[1]||(s.startsWith('http')?'Link':'');
 const MB=(n,ex)=>!n?t('unk'):(ex?'':'~')+(n>=1e9?(n/1e9).toFixed(2)+' GB':n<1e7?Math.max(.1,n/1e6).toFixed(1)+' MB':Math.round(n/1e6)+' MB');
 const T=s=>s?[Math.floor(s/3600),Math.floor(s/60)%60,Math.floor(s%60)].filter((x,i)=>i||x).map((x,i)=>i?String(x).padStart(2,'0'):x).join(':'):'';
@@ -81,7 +80,7 @@ function apply(){
 }
 function theme(v){
   document.documentElement.dataset.theme=v;store('theme',v);
-  $('meta[name=theme-color]').content=v==='dark'?'#0a0a0a':'#f5f5f5';sync();
+  sync();
 }
 function sw(el,get,set){
   let id=null,x0=0,p0=0,trv=0,mv=false;
@@ -98,12 +97,12 @@ sw(tsw,dark,v=>theme(v?'dark':'light'));
 const RK='recent',recents=()=>{try{return JSON.parse(store(RK)||'[]')}catch(e){return[]}};
 function remember(url,title){const l=recents().filter(x=>x.u!==url);l.unshift({u:url,t:title||url});store(RK,JSON.stringify(l.slice(0,4)))}
 function emptyHTML(){const l=recents();
-  return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(s||'Link')}</small></span></button>`}).join(''):'')}
+  return '<p class="empty">'+t('empty')+'</p>'+(l.length?'<div class="rch"><b>Recent</b><button class="rcx" type="button">Clear history</button></div>'+l.map(x=>{const s=site(x.u);return `<button class="rc" type="button" data-u="${esc(x.u)}">${IC[s]||IC.Link}<span><b>${esc(x.t)}</b><small>${esc(disp(s)||'Link')}</small></span></button>`}).join(''):'')}
 const stp=n=>[...$('#st').children].forEach((l,i)=>l.className=i+1<n?'done':i+1===n?'on':'');
 const M=(e,f,o)=>window.GlassKit?GlassKit.morph(e,f,o):f();
 const put=h=>{stp(/glass pv"/.test(h)?2:1);out.classList.remove('anim');M(out,()=>{out.innerHTML=h},{fade:false});void out.offsetWidth;out.classList.add('anim');clearTimeout(put.t);put.t=setTimeout(()=>out.classList.remove('anim'),1300)}; // animasi masuk cukup sekali; lepas kelasnya supaya tidak terulang saat tombol ditekan
 const ER={
-BOT:{title:'YouTube is blocking our server',why:'YouTube sometimes blocks requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1},
+BOT:{title:'This site is blocking our server',why:'Some platforms block requests that come from data centers, even for public videos.',tip:'Try again later, or try a video from another platform.',retry:1},
 BAD_URL:{title:"That doesn't look like a valid link",why:'The link may be cut off or mistyped.',tip:'Copy the full link from the app or browser, then paste it again.'},
 ADDR:{title:"This address can't be used",why:'Links to private or local addresses are blocked for safety.',tip:'Use a public video link instead.'},
 PRIVATE:{title:'This video is private',why:'It needs a login, or only certain people can watch it.',tip:'Try a public video, or one you can open without signing in.'},
@@ -165,7 +164,7 @@ function show(d){
   const sec=(h,hint,l)=>l.length?`<div class="sh"><h2>${h}</h2><span>${hint}</span></div><div class="grid">${l.map(card).join('')}</div>`:'';
   const src=site(u.value.trim()),n=d.formats.length;
   const sum=[best&&best.h?t('upto')+best.h+'p':'',n===1?t('one'):n+t('many')].filter(Boolean).map(x=>`<i>${esc(x)}</i>`).join('');
-  put(`<div class="glass pv"><div class="th">${d.thumb?`<img src="${esc(d.thumb)}" alt="" referrerpolicy="no-referrer">`:''}${d.dur?`<span class="dur">${T(d.dur)}</span>`:''}</div><div class="info">${src?`<span class="src">${IC[src]||IC.Link}${esc(src)}</span>`:''}<b>${esc(d.title)}</b>${d.who?`<small>${esc(d.who)}</small>`:''}<span class="m">${sum}</span></div></div>`
+  put(`<div class="glass pv"><div class="th">${d.thumb?`<img src="${esc(d.thumb)}" alt="" referrerpolicy="no-referrer">`:''}${d.dur?`<span class="dur">${T(d.dur)}</span>`:''}</div><div class="info">${src?`<span class="src">${IC[src]||IC.Link}${esc(disp(src))}</span>`:''}<b>${esc(d.title)}</b>${d.who?`<small>${esc(d.who)}</small>`:''}<span class="m">${sum}</span></div></div>`
     +sec(t('av'),t('avh'),av)+sec(t('vo'),t('voh'),v)+sec(t('ao'),t('aoh'),a));
 }
 
@@ -209,7 +208,7 @@ out.onclick=async ev=>{
 
 
 u.oninput=()=>{const b=$('#bd'),v=u.value.trim(),x=site(v);
-  if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',x);b.title=x;b.classList.remove('hide')}else b.classList.add('hide');
+  if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',disp(x));b.title=disp(x);b.classList.remove('hide')}else b.classList.add('hide');
   xb.classList.toggle('hide',!v);gh.classList.toggle('hide',!!v)};
 xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put(emptyHTML());u.focus()};
 u.onpaste=e=>{const x=(e.clipboardData||window.clipboardData).getData('text'),l=pickUrl(x);if(l&&l!==x.trim()){e.preventDefault();u.value=l} // input type=url membuang baris baru, jadi ambil link sebelum disisipkan
