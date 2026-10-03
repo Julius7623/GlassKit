@@ -1,0 +1,209 @@
+/* GlassKit UI layer (loads after base.css, same on every page).
+   Arti gerak: spring = benda fisik bergeser/ditekan · fade = status berubah ·
+   stagger = hasil datang satu per satu · bar geser = menunggu, durasi tak pasti ·
+   pop = hasil dibuat ulang · garis langkah terisi = kemajuan alur. */
+:root{--ring:0 0 0 3px color-mix(in srgb,var(--ac) 16%,transparent)}
+
+/* Kolom input: tanda jelas bahwa ia aktif */
+.bar{transition:box-shadow .25s var(--e)}
+.bar:focus-within{box-shadow:var(--sh),var(--ring)}
+
+/* Langkah GlassGrab: 1 tempel, 2 pilih, 3 unduh */
+.steps{list-style:none;display:flex;align-items:center;justify-content:center;padding:0;margin:0 auto var(--s5);max-width:440px}
+.steps li{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--t2);white-space:nowrap;transition:color .3s var(--e)}
+.steps li+li{flex:1;min-width:20px}
+.steps li+li::before{content:"";flex:1;height:2px;margin-right:8px;border-radius:2px;background:linear-gradient(var(--ac),var(--ac)) left/0 100% no-repeat,rgba(127,127,127,.25);transition:background-size .5s var(--e)}
+.steps i{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--mono);font-style:normal;background:rgba(127,127,127,.2);transition:background-color .3s,color .3s,scale .45s var(--spring)}
+.steps .on,.steps .done{color:var(--t)}
+.steps .on i,.steps .done i{background:var(--ac);color:var(--act)}
+.steps .on i{scale:1.12}
+.steps .done i{font-size:0}.steps .done i::before{content:"\2713";font-size:13px}
+.steps .on::before,.steps .done::before{background-size:100% 100%}
+
+/* Kerangka pemuatan berbentuk hasil akhir: pengguna tahu apa yang akan muncul */
+.skl .th,.skl .info i{background-color:rgba(127,127,127,.18);background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);background-size:250% 100%;animation:shim 1.4s linear infinite}
+.skl .info{flex:1;justify-content:center;gap:10px}
+.skl .info i{display:block;height:14px;border-radius:7px;width:90%}.skl .info i.s{width:50%}
+@keyframes shim{from{background-position:150% 0}to{background-position:-50% 0}}
+
+/* QR dibuat ulang: denyut singkat */
+
+/* Gerak yang menandai "bisa diklik" hanya untuk perangkat dengan hover */
+.chip{transition:translate .3s var(--spring)}
+a.card:hover .chip{translate:3px 0}
+.cards{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+@media(hover:none){.fmt:hover,a.card:hover{transform:none}}
+
+/* Mobile: Paste tetap terlihat, tombol di baris sendiri agar mudah dijangkau jempol */
+@media(max-width:520px){
+ .bar{flex-wrap:wrap}
+ .bar input{flex:1 1 100%;padding-right:120px}
+ .bar .clr{position:absolute;top:15px;right:8px}
+ .bar .pill{position:absolute;top:14px;right:76px}
+ .bar .ghost,.bar .btn{display:block;order:5}
+ .bar .btn,.bar .ghost:not(.hide){flex:1 1 0;max-width:none}
+ .grid{grid-template-columns:1fr}
+ .steps li:not(.on) span{display:none}
+}
+
+/* Desktop: menu jadi sidebar tetap, konten lebih lega, hasil unduhan dua kolom */
+@media(min-width:1280px){
+ body{padding-left:372px}
+ .mb,.scrim{display:none}
+ .drawer{visibility:visible!important;transform:none!important;transition:none;width:340px;background:var(--g);-webkit-backdrop-filter:blur(34px) saturate(180%);backdrop-filter:blur(34px) saturate(180%)}
+ .dh .x{display:none}
+ header{justify-content:flex-end}
+ main,header{max-width:1040px}
+ main:has(.doc){max-width:760px}
+ .bar{max-width:720px;margin-inline:auto}
+ #out:has(.pv){display:grid;grid-template-columns:288px minmax(0,1fr);column-gap:var(--s5);align-items:start}
+ #out:has(.pv)>.pv{grid-column:1;grid-row:1/span 8;position:sticky;top:var(--s5);flex-direction:column}
+ #out:has(.pv)>.pv .th{width:100%}
+ #out:has(.pv)>:not(.pv){grid-column:2}
+ .empty,.rch,.rc{max-width:720px;margin-inline:auto}
+}
+
+/* Tahan = tombol "tertahan"; tahan lama = "siap" (lepas = jalan); tap = konfirmasi;
+   geser/scroll atau jari keluar = batal lembut tanpa konfirmasi. */
+button:active{transform:none}.mb:active{scale:none}
+@media(prefers-reduced-motion:reduce){.holding{opacity:.75}}
+
+/* Desktop (mouse): hover = "bisa diklik", tekan/tahan memakai efek yang sama dengan mobile */
+.btn{transition:transform .4s var(--sp),opacity .25s,translate .2s var(--e),box-shadow .2s}
+.ghost{transition:max-width .4s var(--e),padding .4s var(--e),margin .4s var(--e),opacity .25s,transform .4s var(--sp),translate .2s var(--e),box-shadow .2s}
+.mb,.dh .x,.px,.rc,.ci,.cc,.rch button{transition:box-shadow .2s,opacity .25s,border-color .2s}
+.fmt{transition:transform .4s var(--sp),opacity .25s,box-shadow .25s}
+.card{transition:transform .4s var(--sp),box-shadow .3s}
+.ico{transition:scale .3s var(--spring)}
+@media(hover:hover) and (pointer:fine){
+ button:not(:disabled),a.card,a.di,.rc{cursor:pointer}
+ button:disabled{cursor:not-allowed}
+ .btn:hover{translate:0 -1px;box-shadow:0 8px 18px var(--shc)}
+ .ghost:hover,.mb:hover,.dh .x:hover,.px:hover,.rc:hover,.ci:hover,.cc:hover{box-shadow:inset 0 0 0 999px rgba(127,127,127,.14)}
+ .rch button:hover{opacity:.7}
+ .clr:hover::before{background:rgba(127,127,127,.38)}
+ .fmt:hover{box-shadow:inset 0 1px 0 var(--hl),0 10px 24px var(--shc)}
+ a.card:hover{box-shadow:0 16px 40px var(--shc),inset 0 1.5px 0 var(--hl)}
+ a.card:hover .ico,a.di:hover .ico{scale:1.08}
+}
+
+/* Saat file sedang disiapkan: opsi lain diredupkan dan abu-abu = "tidak bisa ditekan sekarang".
+   Hanya kartu yang diproses yang tetap terang dan bergerak (bar geser). */
+.fmt{transition:transform .4s var(--sp),opacity .3s,filter .3s,box-shadow .25s}
+.fmt[aria-disabled=true]{opacity:.38;filter:grayscale(1);cursor:not-allowed;transform:none}
+.fmt[aria-disabled=true]:hover{transform:none;box-shadow:inset 0 1px 0 var(--hl)}
+
+/* HP: blur per kartu format berat; kartu tetap semi-transparan tanpa blur */
+@media(max-width:520px),(hover:none){.fmt{-webkit-backdrop-filter:none;backdrop-filter:none}}
+
+/* Tipografi: font sistem Apple (SF Pro di iPhone/Mac), satu keluarga untuk semua teks; angka rata (tabular) */
+:root{--font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;--mono:var(--font)}
+body,button,input,textarea,select{font-family:var(--font)}
+body{font-variant-numeric:tabular-nums}
+h1{font-weight:700;letter-spacing:-.035em}
+.chip,.tag{text-transform:none;letter-spacing:0;font-size:12px;font-weight:600}
+.fmt b em,.m i,.dur{letter-spacing:0}
+.credit{font-size:13px}.credit b{font:600 13px var(--font);letter-spacing:0}
+
+/* Tombol: satu bahasa (kapsul, 50px, 17px/600). Utama = terisi, sekunder = kaca */
+.btn,.ghost{height:50px;border-radius:999px;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.bar{border-radius:32px}
+
+/* Arti gerak: lencana centang membesar = unduhan sudah dimulai (selesai), lalu hilang sendiri */
+.fmt.ok{box-shadow:inset 0 0 0 1.5px var(--ac)}
+.fmt.ok::after{content:"\2713";position:absolute;top:-7px;right:-7px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ac);color:var(--act);font:700 13px var(--font);border:2px solid var(--bg);animation:okpop .5s var(--spring)}
+@keyframes okpop{from{scale:.4;opacity:0}}
+
+/* Slider tema: posisi awal ditentukan langsung oleh tema (tanpa menunggu JS) dan tanpa animasi sebelum halaman siap, jadi tidak bergeser saat refresh. Animasi hanya untuk perubahan oleh pengguna */
+html:not(.ready) .sw,html:not(.ready) .sw *{transition:none!important}
+html[data-theme=dark] .sw{background:#636366;--x:20px}
+html[data-theme=dark] .sw .sun{opacity:1;transform:none}
+html[data-theme=dark] .sw .moon{opacity:0;transform:scale(.6)}
+
+/* ===== Clean layer (gaya Apple): permukaan datar, glass hanya untuk lapisan melayang ===== */
+:root{--bg:#f2f2f7;--card:#fff;--fill:rgba(120,120,128,.12)}
+[data-theme=dark]{--bg:#000;--card:#1c1c1e;--fill:rgba(120,120,128,.24)}
+main .glass,.fmt,.rc{background:var(--card);border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:20px}
+main .glass::before{display:none}
+.ghost,.mb{background:var(--fill);border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+.bar:focus-within{box-shadow:var(--ring)}
+.seg{box-shadow:none;background:var(--fill)}
+h1{font-size:clamp(28px,8.2vw,36px);letter-spacing:-.03em;margin:20px 0 6px}
+.sub{font-size:15px;line-height:1.4;margin:0 auto 20px;max-width:36ch}
+.empty{display:none}
+.foot{font-size:12px;line-height:1.5;margin-top:24px}
+.foot .lk{color:var(--t2);text-decoration-color:rgba(127,127,127,.4)}
+.credit{border-top:0;margin-top:12px;padding-top:0;font-size:11.5px}
+.card .chip,.card.live .chip{display:none}
+.card{gap:4px;padding:18px}.card b{font-size:17px;font-weight:600}.card p{font-size:13px}
+.th{border-radius:12px}
+.src{font-size:11px;font-weight:600;letter-spacing:.04em}
+.rch b{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t2)}
+.rc{margin-bottom:6px}
+.qrc{border-radius:16px}
+.steps{margin-bottom:var(--s4)}
+.steps:not(:has(.done)){display:none}
+.steps i{width:20px;height:20px;font-size:11px}
+.steps li{font-size:13px}
+
+/* ===== Pergantian tema: semua warna ikut satu kurva waktu, tanpa bagian yang tertinggal ===== */
+@property --card{syntax:"<color>";inherits:true;initial-value:#fff}
+@property --fill{syntax:"<color>";inherits:true;initial-value:rgba(120,120,128,.12)}
+html.ready{--tt:.55s cubic-bezier(.4,0,.2,1);transition:--bg var(--tt),--t var(--tt),--t2 var(--tt),--g var(--tt),--gb var(--tt),--hl var(--tt),--shc var(--tt),--ac var(--tt),--ac2 var(--tt),--act var(--tt),--rim1 var(--tt),--rim2 var(--tt),--card var(--tt),--fill var(--tt)}
+/* selama pergantian, transisi warna milik tiap komponen dimatikan agar tidak menunda warna yang sedang bergerak */
+html.theming :where(button:not(.sw),a,.glass,.fmt,.rc,.card,.seg,.seg *,.ico,.drawer){transition-property:none}
+/* status bar dan bilah bawah Safari mengikuti tema pilihan, bukan tema sistem */
+html[data-theme=dark]{color-scheme:dark}
+html[data-theme=light]{color-scheme:light}
+
+/* Tombol hapus berupa teks "Clear": tidak tertukar dengan ikon platform X */
+.bar .clr{width:auto;height:34px;max-width:90px;padding:0 12px;border-radius:99px;background:var(--fill);color:var(--t);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap}
+.bar .clr::before,.bar .clr svg{display:none}
+.bar .clr::after{content:"Clear"}
+.bar .clr.hide{max-width:0;padding:0;margin-left:-8px}
+
+/* Format: pilihan terbaik dulu, sisanya dilipat */
+.more{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:12px;border-radius:14px;background:var(--fill);font-size:15px;font-weight:600}
+.more i{width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;rotate:45deg;translate:0 -2px;transition:rotate .35s var(--spring),translate .35s var(--spring)}
+.more[aria-expanded=true] i{rotate:225deg;translate:0 2px}
+.mx{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--e)}
+.mx>div{min-height:0;overflow:hidden}
+.mx.open{grid-template-rows:1fr}
+
+/* Tombol Clear otomatis di setiap kolom ketik: muncul hanya saat ada isi */
+.cw{position:relative;display:flex;flex:1 1 auto;min-width:0}
+.cw input{flex:1;min-width:0;width:100%;transition:padding-right .2s var(--e)}
+.cw.has input{padding-right:84px}
+.cl{position:absolute;right:8px;top:50%;translate:0 -50%;height:30px;padding:0 12px;border-radius:99px;background:rgba(127,127,127,.22);color:var(--t);font-size:13px;font-weight:600;opacity:0;scale:.9;pointer-events:none;transition:opacity .22s var(--e),scale .22s var(--e)}
+.cw.has .cl{opacity:1;scale:1;pointer-events:auto;transition:opacity .2s var(--e),scale .4s var(--spring)}
+.pt .cw{display:block;margin:4px 16px 0}.pt .cw .ps{width:100%;margin:0}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+
+/* Keluar mulus: tombol Clear memudar dan mengecil, lebar menyempit bertahap; ketukan tanpa jeda */
+.bar .clr{transition:max-width .35s var(--e),margin .35s var(--e),padding .35s var(--e),opacity .22s var(--e),transform .3s var(--e)}
+button,a,input{touch-action:manipulation}
+
+/* Kotak QR: sebelum ada kode berupa area kosong yang menyatu dengan tema; menjadi putih saat kode muncul (QR wajib hitam di atas putih agar mudah terbaca pemindai) */
+.qrc{outline:1.5px dashed transparent;outline-offset:-1.5px;transition:background-color .35s var(--e),outline-color .35s var(--e)}
+.qrc:has(.qrh){background:var(--fill);outline-color:rgba(127,127,127,.35)}
+.qrc:has(.qrh) .qrh{color:var(--t2)}
+html.theming .qrc{transition-property:none}
+
+/* Pengingat: file siap dan dialog konfirmasi keluar */
+.rdy,.dlg .box{background:color-mix(in srgb,var(--card) 90%,transparent);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 12px 40px var(--shc)}
+.rdy{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));z-index:60;width:min(420px,calc(100vw - 32px));translate:-50% 0;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 18px;border-radius:24px;transform:translateY(calc(100% + 48px));opacity:0;transition:transform .5s var(--spring),opacity .3s var(--e)}
+.rdy.on{transform:none;opacity:1}
+.rdy>div{flex:1;min-width:0;display:flex;flex-direction:column}
+.rdy b{font-size:15px;font-weight:600}.rdy small{color:var(--t2);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rdy .btn{height:40px;border-radius:16px;padding:0 18px;font-size:15px}
+.rdy.nudge{animation:nudge .55s var(--spring)}
+@keyframes nudge{35%{scale:1.04}}
+.dlg{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,0);pointer-events:none;transition:background-color .3s var(--e)}
+.dlg.on{background:rgba(0,0,0,.45);pointer-events:auto}
+.dlg .box{width:min(320px,100%);padding:22px 20px 16px;border-radius:28px;text-align:center;scale:.92;opacity:0;transition:scale .45s var(--spring),opacity .25s var(--e)}
+.dlg.on .box{scale:1;opacity:1}
+.dlg h2{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.dlg p{color:var(--t2);font-size:15px;line-height:1.4;margin:6px 0 18px}
+.dlg .eb{display:flex;flex-direction:column;gap:8px}
+.dlg .btn,.dlg .ghost{width:100%;max-width:none;height:46px}
+.dlg .ghost{background:var(--fill)}

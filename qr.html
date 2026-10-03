@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Create QR codes for links, text, WiFi, and WhatsApp. Free, private, no sign-up.">
+<title>GlassQR - Free QR code generator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23111'/%3E%3Cpath d='M16 7v13M10.500 15l5.500 5.500 5.500-5.500M9 25h14' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="canonical" href="__ORIGIN__/qr">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
+<meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassQR - Free QR code generator"><meta property="og:description" content="Create QR codes for links, text, WiFi, and WhatsApp. Free, private, no sign-up."><meta property="og:url" content="__ORIGIN__/qr"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
+<script>
+try{var s=localStorage.getItem('theme')}catch(e){}
+document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
+</script>
+<link rel="stylesheet" href="/base.css?v=8">
+<link rel="stylesheet" href="/ui.css?v=17">
+<script src="/shell.js?v=26" defer></script>
+<style>
+/* Slider segmented control (same feel as the dark mode switch) */
+.seg{--n:3;position:relative;display:flex;padding:4px;border-radius:999px;background:rgba(127,127,127,.16);margin-bottom:16px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer;box-shadow:inset 0 1px 3px rgba(0,0,0,.14)}
+.seg .thumb{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px)/var(--n));border-radius:999px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.22),0 0 0 .5px rgba(0,0,0,.08);translate:var(--x,calc(var(--i,0)*100%)) 0;scale:1;transition:translate .75s var(--spring),scale .45s var(--spring),box-shadow .3s;pointer-events:none;will-change:translate,scale}
+.seg.press .thumb{scale:1.05 1.14;box-shadow:0 8px 18px rgba(0,0,0,.26),0 0 0 .5px rgba(0,0,0,.08)}
+.seg.drag .thumb{transition:scale .45s var(--spring),box-shadow .3s}
+[data-theme=dark] .seg .thumb{background:rgba(255,255,255,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 2px 8px rgba(0,0,0,.4)}
+[data-theme=dark] .seg.press .thumb{box-shadow:inset 0 0 0 1px rgba(255,255,255,.2),0 8px 18px rgba(0,0,0,.5)}
+.seg button{position:relative;z-index:1;flex:1 1 0;min-width:0;min-height:36px;padding:0 8px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:15px;font-weight:600;color:var(--t2);white-space:nowrap;cursor:pointer;transition:color .3s;-webkit-tap-highlight-color:transparent}
+.seg button[aria-selected=true],.seg button[aria-checked=true]{color:var(--t)}
+.seg.sm{width:100%;max-width:340px;margin:16px 0 0}
+/* Lensa kaca: label di dalam kaca dibelokkan di tepinya (refraksi), ada kilau tepi. Kaca di atas label asli; latar lensa menutup label asli di bawahnya */
+.seg.has-lens .thumb{z-index:2;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.lensclip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;clip-path:inset(0 round 999px)}
+.lens{position:absolute;top:0;bottom:0;left:0;width:calc(var(--n)*100%);display:flex;color:var(--t);background:linear-gradient(180deg,#fff,#efeff3);translate:calc(-1*var(--x,calc(var(--i,0)*100%/var(--n))));transition:translate .75s var(--spring)}
+.lens span{flex:1 1 0;display:grid;place-items:center;font-size:15px;font-weight:600;white-space:nowrap}
+.seg.sm .lens span{font-size:13px}
+.seg[data-edge]:not(.drag) .lens{transition:translate .7s cubic-bezier(.22,.9,.3,1)}
+.seg.drag .lens{transition:none}
+.seg.press .lens{opacity:.88}
+.seg.has-lens .thumb::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7),inset 0 3px 5px rgba(255,255,255,.7),inset 0 -4px 7px rgba(0,0,0,.09),inset 0 0 12px rgba(255,255,255,.35)}
+[data-theme=dark] .lens{background:linear-gradient(180deg,#68686d,#4b4b50)}
+[data-theme=dark] .seg.has-lens .thumb::after{box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),inset 0 3px 5px rgba(255,255,255,.28),inset 0 -4px 7px rgba(0,0,0,.25),inset 0 0 12px rgba(255,255,255,.12)}
+.seg[data-edge]:not(.drag) .thumb{transition:translate .7s cubic-bezier(.22,.9,.3,1),scale .45s var(--spring),box-shadow .3s}
+/* Kaca cair: tipis, ada kilau tepi atas, makin bening dan membesar saat disentuh; meregang mengikuti kecepatan geser */
+.seg .thumb{background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(255,255,255,.8));-webkit-backdrop-filter:blur(10px) saturate(1.8);backdrop-filter:blur(10px) saturate(1.8);box-shadow:0 2px 6px rgba(0,0,0,.2),inset 0 1px 0 #fff,inset 0 -1px 1px rgba(0,0,0,.07),0 0 0 .5px rgba(0,0,0,.08)}
+.seg.press .thumb{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.4));-webkit-backdrop-filter:blur(3px) saturate(2.1) brightness(1.08);backdrop-filter:blur(3px) saturate(2.1) brightness(1.08);scale:calc(1.03*var(--sx,1)) calc(1.14/var(--sx,1))}
+[data-theme=dark] .seg .thumb{background:linear-gradient(180deg,rgba(255,255,255,.3),rgba(255,255,255,.14))}
+[data-theme=dark] .seg.press .thumb{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.08))}
+.seg.sm button{min-height:32px;font-size:13px}
+
+.form{display:flex;flex-direction:column;gap:12px;padding:16px;margin-bottom:16px}
+.fld{display:flex;flex-direction:column;gap:6px}.fld span{font-size:13px;font-weight:600;color:var(--t2);padding:0 4px}
+.fld input{height:48px;border-radius:16px;border:1px solid var(--gb);background:rgba(127,127,127,.1);color:inherit;font:inherit;padding:0 16px;outline:0}
+.fld input:focus{border-color:var(--t2)}
+.hint{font-size:13px;color:var(--t2);padding:0 4px;overflow-wrap:anywhere}
+
+/* Country button next to the phone field */
+.phone{display:flex;gap:8px}
+.phone input{flex:1;min-width:0}
+.cc{flex:none;display:flex;align-items:center;gap:8px;height:48px;padding:0 10px 0 12px;border-radius:16px;border:1px solid var(--gb);background:rgba(127,127,127,.1);color:inherit;font:inherit;font-weight:600;cursor:pointer;transition:border-color .2s}
+.cc:hover{border-color:var(--t2)}
+.cc b{font-weight:600;font-variant-numeric:tabular-nums}
+.cc svg{width:16px;height:16px;fill:none;stroke:var(--t2);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.iso{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;border-radius:7px;background:rgba(127,127,127,.2);font-style:normal;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--t2)}
+
+/* Country picker: kartu mengambang yang mengikuti visual viewport, jadi selalu di atas keyboard */
+.sheet{position:fixed;left:0;right:0;top:0;height:var(--vh,100dvh);transform:translateY(var(--vt,0px));z-index:50;display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom));visibility:hidden;pointer-events:none;transition:visibility 0s .45s,padding .25s var(--e)}
+.sheet.kb{padding-bottom:8px}
+.sheet.open{visibility:visible;pointer-events:auto;transition-delay:0s}
+.sheet .sc{position:absolute;inset:0;background:transparent;touch-action:none}
+.sheet .pn{position:relative;width:min(100%,520px);height:580px;max-height:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:28px;background:var(--bg);border:1px solid var(--gb);box-shadow:0 20px 60px rgba(0,0,0,.35);transform:translateY(28px) scale(.97);opacity:0;transition:transform .45s var(--spring),opacity .25s,max-height .3s var(--e);outline:0}
+.sheet.open .pn{transform:none;opacity:1}
+@media(min-width:600px){.sheet{align-items:center}}
+.pt{flex:none;position:relative;z-index:2;background:var(--bg);padding-bottom:10px}
+.pt::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--gb)}
+.ph{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px}.ph b{font-size:18px;font-weight:700}
+.px{width:44px;height:44px;margin:-4px -6px -4px 0;border-radius:50%;display:grid;place-items:center;background:none;color:inherit;border:0;cursor:pointer;position:relative}
+.px::before{content:"";position:absolute;width:36px;height:36px;border-radius:50%;background:rgba(127,127,127,.18)}
+.px svg{position:relative;width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.ps{display:block;width:calc(100% - 32px);margin:4px 16px 0;height:44px;border-radius:14px;border:1px solid var(--gb);background:rgba(127,127,127,.1);color:inherit;font:inherit;padding:0 14px;outline:0}
+.ps:focus{border-color:var(--t2)}
+.plist{position:relative;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 8px 12px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 10px);mask-image:linear-gradient(to bottom,transparent 0,#000 10px)}
+.lh{position:sticky;top:-4px;z-index:1;margin:0 -8px;padding:8px 20px 4px;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--t2);background:var(--bg)}
+.ci{display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:6px 12px;border:0;border-radius:14px;text-align:left;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.ci:hover{background:rgba(127,127,127,.12)}
+.ci.sel{background:rgba(127,127,127,.2)}
+.ci .nm{flex:1;min-width:0}
+.ci b{font-weight:600;color:var(--t2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ci.sel b{color:var(--t)}
+.pe{text-align:center;color:var(--t2);padding:30px 10px}
+
+.qrbox{display:flex;flex-direction:column;align-items:center;padding:20px}
+.qrc{width:min(100%,300px);aspect-ratio:1;border-radius:20px;background:#fff;display:grid;place-items:center;overflow:hidden;color:#6e6e73}
+.qrc svg{width:100%;height:100%;display:block}
+.qrh{padding:24px;text-align:center;font-size:15px;max-width:240px}
+.sub2{width:100%;margin-top:12px;font-size:13px;color:var(--t2);text-align:center;max-width:340px;min-height:2.8em}
+.qrbox .eb{margin-top:16px;width:100%}.qrbox .eb>*{flex:1}
+.opt{display:flex;flex-direction:column;align-items:center;width:100%}
+.opt .ol{display:none;font-size:13px;font-weight:600;color:var(--t2);padding:0 4px;align-self:flex-start}
+.opt.glass .ol{display:block}
+.opt.glass .seg.sm,.opt.glass .sub2{margin:0}
+.opt.glass .sub2{min-height:0}
+.opt.glass{gap:12px}
+.seg.drag{cursor:grabbing!important}
+@media(hover:hover){.seg button:hover{color:var(--t)}.cc:hover,.ci:hover{border-color:var(--t2)}}
+@media(min-width:960px){
+ main,header{max-width:1040px}
+ h1{margin-top:36px}
+ .sub{margin-bottom:32px}
+ .qrgrid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+ .qrgrid .qrbox{position:sticky;top:24px;margin:0}
+ .qrc{width:min(100%,340px)}
+ .ctl .seg{margin-bottom:20px}
+ .ctl .form{padding:20px;gap:16px;margin-bottom:20px}
+ .ctl>:last-child{margin-bottom:0}
+ .seg button{min-height:40px}
+ .seg.sm button{min-height:34px}
+ .foot{margin-top:40px}
+}
+</style>
+</head>
+
+<body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="lens" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage href="data:image/png;base64,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" x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="18" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
+<header>
+  <button class="mb" id="mb" aria-label="Open menu" aria-expanded="false" aria-controls="dr"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <button class="sw" id="tsw" role="switch" aria-label="Dark mode"><span class="kn">
+    <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </span></button>
+</header>
+<main>
+  <h1>Create a QR code</h1>
+  <p class="sub">Type or paste anything. The code updates as you go.</p>
+  <div class="qrgrid">
+  <div class="ctl" id="ctl">
+  <div class="seg" id="tabs" role="tablist" aria-label="QR code type">
+    <span class="thumb"></span>
+    <button type="button" role="tab" data-m="text">Link or text</button>
+    <button type="button" role="tab" data-m="wifi">Wi-Fi</button>
+    <button type="button" role="tab" data-m="wa">WhatsApp</button>
+  </div>
+  <div class="glass form" id="form"></div>
+  </div>
+  <div class="glass qrbox" id="qb">
+    <div class="qrc" id="qr"><p class="qrh" id="qh">Your QR code will appear here.</p></div>
+    <div class="opt" id="opt">
+    <span class="ol">Error correction</span>
+    <div class="seg sm" id="ec" role="radiogroup" aria-label="Error correction">
+      <span class="thumb"></span>
+      <button type="button" role="radio" data-l="1">Low</button>
+      <button type="button" role="radio" data-l="0">Medium</button>
+      <button type="button" role="radio" data-l="2">High</button>
+    </div>
+    <p class="sub2" id="ecn"></p>
+    </div>
+    <div class="eb"><button class="btn" id="dp" disabled>Save PNG</button><button class="ghost" id="ds" disabled>Save SVG</button></div>
+  </div>
+  </div>
+  <p class="foot">The code is created on your device. Links and text are never stored.</p>
+</main>
+<script src="/qr-lib.js?v=2" defer></script>
+<script defer>
+addEventListener('DOMContentLoaded',()=>{
+const $=s=>document.querySelector(s),box=$('#qr');
+const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nrm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+/* ---------- Slider control: tap a segment or drag the thumb ---------- */
+function Seg(el,start,on){
+  const bs=[...el.querySelectorAll('button')],th=el.querySelector('.thumb'),n=bs.length;
+  const A=el.getAttribute('role')==='tablist'?'aria-selected':'aria-checked';
+  let cur=start,id=null,x0=0,p0=0,sw=0,mv=false,grab=false;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  el.style.setProperty('--n',n);
+  if(window.CSS&&CSS.supports('filter','url(#lens)')){th.innerHTML='<div class="lensclip"><div class="lens" aria-hidden="true">'+bs.map(b=>'<span>'+b.textContent+'</span>').join('')+'</div></div>';el.classList.add('has-lens');
+  // filter per slider dengan ukuran piksel nyata (peta distorsi harus pas selebar kaca, kalau tidak sisi kanan tidak terdistorsi dan muncul pita abu)
+  const NS='http://www.w3.org/2000/svg',fid='lens'+(Seg.k=(Seg.k||0)+1),sv=document.createElementNS(NS,'svg');
+  sv.setAttribute('width','0');sv.setAttribute('height','0');sv.style.position='absolute';
+  sv.innerHTML='<filter id="'+fid+'" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feImage href="'+document.querySelector('#lens feImage').getAttribute('href')+'" x="0" y="0" width="1" height="1" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="12" xChannelSelector="R" yChannelSelector="G"/></filter>';
+  el.append(sv);th.firstChild.style.filter='url(#'+fid+')';
+  const fit=()=>{const im=sv.querySelector('feImage');const c=getComputedStyle(th);im.setAttribute('width',parseFloat(c.width));im.setAttribute('height',parseFloat(c.height))};fit();new ResizeObserver(fit).observe(th)}   // lensa: salinan label di dalam kaca, dibelokkan di tepinya
+  const paint=()=>{el.style.setProperty('--i',cur);cur===0||cur===n-1?el.setAttribute('data-edge',''):el.removeAttribute('data-edge');bs.forEach((b,i)=>{b.setAttribute(A,i===cur);b.tabIndex=i===cur?0:-1})};
+  const set=i=>{i=clamp(i,0,n-1);const ch=i!==cur,d=Math.abs(i-cur);cur=i;paint();if(ch){GlassKit.jelly(th,d,i===0?'left':i===n-1?'right':'center');on(i)}};
+  let lx=0,lt=0,sxT=0;const rb=v=>{const mx=(n-1)*sw,q=o=>6*(1-Math.exp(-o/30));return v<0?-q(-v):v>mx?mx+q(v-mx):v};   // rubber band di ujung
+  const at=x=>{const r=el.getBoundingClientRect();return clamp(Math.floor((x-r.left-4)/((r.width-8)/n)),0,n-1)};
+  // true hanya jika titik sentuh ada di atas glass (thumb), dengan toleransi 4px
+  const onGlass=e=>{const r=th.getBoundingClientRect(),m=4;return e.clientX>=r.left-m&&e.clientX<=r.right+m&&e.clientY>=r.top-m&&e.clientY<=r.bottom+m};
+  el.addEventListener('pointerdown',e=>{if(e.button)return;id=e.pointerId;el.setPointerCapture(id);th.getAnimations().forEach(a=>a.cancel());x0=lx=e.clientX;lt=performance.now();mv=false;grab=onGlass(e);
+    if(grab){sw=th.offsetWidth;p0=cur*sw;el.classList.add('press')}});
+  el.addEventListener('pointermove',e=>{
+    if(id===null){el.style.cursor=onGlass(e)?'grab':'pointer';return}   // hover (mouse): kursor tangan hanya di atas glass
+    if(e.pointerId!==id||!grab)return;                                   // di luar glass: tidak bisa digeser
+    const dx=e.clientX-x0;if(!mv&&Math.abs(dx)<4)return;mv=true;el.classList.add('drag');el.style.setProperty('--x',rb(p0+dx)+'px');const t=performance.now(),v=(e.clientX-lx)/Math.max(t-lt,1);lx=e.clientX;lt=t;el.style.setProperty('--sx',1+Math.min(Math.abs(v)*.08,.08));clearTimeout(sxT);sxT=setTimeout(()=>el.style.removeProperty('--sx'),70)});
+  const end=(e,ok)=>{if(e.pointerId!==id)return;id=null;let i=cur;const pv=cur;
+    if(ok){if(grab)i=mv?Math.round(parseFloat(el.style.getPropertyValue('--x'))/sw):at(e.clientX);
+           else if(Math.abs(e.clientX-x0)<8)i=at(e.clientX)}            // tap di luar glass: pindah ke segmen yang di-tap
+    grab=false;el.classList.remove('press','drag');el.style.removeProperty('--x');el.style.removeProperty('--sx');set(i);if(mv&&i===pv)GlassKit.jelly(th,.7,i===0?'left':i===n-1?'right':'center')};
+  el.addEventListener('pointerup',e=>end(e,true));
+  el.addEventListener('pointercancel',e=>end(e,false));
+  el.addEventListener('click',e=>{if(e.detail===0){const b=e.target.closest('button');if(b)set(bs.indexOf(b))}});
+  el.addEventListener('keydown',e=>{const d={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key];if(d){e.preventDefault();set(cur+d);bs[cur].focus()}});
+  paint();
+}
+
+/* ---------- Countries: ISO code, name, dialing code ---------- */
+const RAW=`AF Afghanistan 93
+AL Albania 355
+DZ Algeria 213
+AS American Samoa 1684
+AD Andorra 376
+AO Angola 244
+AI Anguilla 1264
+AG Antigua and Barbuda 1268
+AR Argentina 54
+AM Armenia 374
+AW Aruba 297
+AU Australia 61
+AT Austria 43
+AZ Azerbaijan 994
+BS Bahamas 1242
+BH Bahrain 973
+BD Bangladesh 880
+BB Barbados 1246
+BY Belarus 375
+BE Belgium 32
+BZ Belize 501
+BJ Benin 229
+BM Bermuda 1441
+BT Bhutan 975
+BO Bolivia 591
+BA Bosnia and Herzegovina 387
+BW Botswana 267
+BR Brazil 55
+VG British Virgin Islands 1284
+BN Brunei 673
+BG Bulgaria 359
+BF Burkina Faso 226
+BI Burundi 257
+KH Cambodia 855
+CM Cameroon 237
+CA Canada 1
+CV Cape Verde 238
+KY Cayman Islands 1345
+CF Central African Republic 236
+TD Chad 235
+CL Chile 56
+CN China 86
+CO Colombia 57
+KM Comoros 269
+CG Congo 242
+CK Cook Islands 682
+CR Costa Rica 506
+CI Côte d'Ivoire (Ivory Coast) 225
+HR Croatia 385
+CU Cuba 53
+CW Curaçao 599
+CY Cyprus 357
+CZ Czechia (Czech Republic) 420
+CD DR Congo 243
+DK Denmark 45
+DJ Djibouti 253
+DM Dominica 1767
+DO Dominican Republic 1
+EC Ecuador 593
+EG Egypt 20
+SV El Salvador 503
+GQ Equatorial Guinea 240
+ER Eritrea 291
+EE Estonia 372
+SZ Eswatini (Swaziland) 268
+ET Ethiopia 251
+FK Falkland Islands 500
+FO Faroe Islands 298
+FJ Fiji 679
+FI Finland 358
+FR France 33
+GF French Guiana 594
+PF French Polynesia 689
+GA Gabon 241
+GM Gambia 220
+GE Georgia 995
+DE Germany 49
+GH Ghana 233
+GI Gibraltar 350
+GR Greece 30
+GL Greenland 299
+GD Grenada 1473
+GP Guadeloupe 590
+GU Guam 1671
+GT Guatemala 502
+GN Guinea 224
+GW Guinea-Bissau 245
+GY Guyana 592
+HT Haiti 509
+HN Honduras 504
+HK Hong Kong 852
+HU Hungary 36
+IS Iceland 354
+IN India 91
+ID Indonesia 62
+IR Iran 98
+IQ Iraq 964
+IE Ireland 353
+IL Israel 972
+IT Italy 39
+JM Jamaica 1
+JP Japan 81
+JO Jordan 962
+KZ Kazakhstan 7
+KE Kenya 254
+KI Kiribati 686
+XK Kosovo 383
+KW Kuwait 965
+KG Kyrgyzstan 996
+LA Laos 856
+LV Latvia 371
+LB Lebanon 961
+LS Lesotho 266
+LR Liberia 231
+LY Libya 218
+LI Liechtenstein 423
+LT Lithuania 370
+LU Luxembourg 352
+MO Macau 853
+MG Madagascar 261
+MW Malawi 265
+MY Malaysia 60
+MV Maldives 960
+ML Mali 223
+MT Malta 356
+MH Marshall Islands 692
+MQ Martinique 596
+MR Mauritania 222
+MU Mauritius 230
+YT Mayotte 262
+MX Mexico 52
+FM Micronesia 691
+MD Moldova 373
+MC Monaco 377
+MN Mongolia 976
+ME Montenegro 382
+MS Montserrat 1664
+MA Morocco 212
+MZ Mozambique 258
+MM Myanmar (Burma) 95
+NA Namibia 264
+NR Nauru 674
+NP Nepal 977
+NL Netherlands 31
+NC New Caledonia 687
+NZ New Zealand 64
+NI Nicaragua 505
+NE Niger 227
+NG Nigeria 234
+NU Niue 683
+KP North Korea 850
+MK North Macedonia 389
+MP Northern Mariana Islands 1670
+NO Norway 47
+OM Oman 968
+PK Pakistan 92
+PW Palau 680
+PS Palestine 970
+PA Panama 507
+PG Papua New Guinea 675
+PY Paraguay 595
+PE Peru 51
+PH Philippines 63
+PL Poland 48
+PT Portugal 351
+PR Puerto Rico 1
+QA Qatar 974
+RE Réunion 262
+RO Romania 40
+RU Russia 7
+RW Rwanda 250
+PM Saint Pierre and Miquelon 508
+KN Saint Kitts and Nevis 1869
+LC Saint Lucia 1758
+VC Saint Vincent and the Grenadines 1784
+WS Samoa 685
+SM San Marino 378
+ST São Tomé and Príncipe 239
+SA Saudi Arabia 966
+SN Senegal 221
+RS Serbia 381
+SC Seychelles 248
+SL Sierra Leone 232
+SG Singapore 65
+SX Sint Maarten 1721
+SK Slovakia 421
+SI Slovenia 386
+SB Solomon Islands 677
+SO Somalia 252
+ZA South Africa 27
+KR South Korea 82
+SS South Sudan 211
+ES Spain 34
+LK Sri Lanka 94
+SD Sudan 249
+SR Suriname 597
+SE Sweden 46
+CH Switzerland 41
+SY Syria 963
+TW Taiwan 886
+TJ Tajikistan 992
+TZ Tanzania 255
+TH Thailand 66
+TL Timor-Leste (East Timor) 670
+TG Togo 228
+TK Tokelau 690
+TO Tonga 676
+TT Trinidad and Tobago 1868
+TN Tunisia 216
+TR Türkiye (Turkey) 90
+TM Turkmenistan 993
+TC Turks and Caicos Islands 1649
+TV Tuvalu 688
+VI U.S. Virgin Islands 1340
+UG Uganda 256
+UA Ukraine 380
+AE United Arab Emirates (UAE) 971
+GB United Kingdom (UK) 44
+US United States (USA) 1
+UY Uruguay 598
+UZ Uzbekistan 998
+VU Vanuatu 678
+VA Vatican City 379
+VE Venezuela 58
+VN Vietnam 84
+WF Wallis and Futuna 681
+YE Yemen 967
+ZM Zambia 260
+ZW Zimbabwe 263`;
+const CC=RAW.split('\n').map(l=>{const p=l.trim().split(' '),code=p.pop(),iso=p.shift(),name=p.join(' ');return{iso,name,code,key:nrm(name)}}).sort((a,b)=>a.key.localeCompare(b.key));
+const dial=c=>'+'+(c.code.length>1&&c.code[0]==='1'?'1 '+c.code.slice(1):c.code);
+let cc=CC.find(c=>c.iso===store('qrcc'))||CC.find(c=>c.iso==='ID');
+
+/* ---------- QR state ---------- */
+const MODES=['text','wifi','wa'],LV=[1,0,2];
+const NOTE=['Smallest and simplest code. Best for clean screens.','Balanced. A good choice for most uses.','Still scans when dirty or damaged, but looks denser.'];
+const F={
+ text:[['v','Link or text','text','https://example.com']],
+ wifi:[['s','Network name','text','My WiFi'],['p','Password','text','']],
+ wa:[['m','Message (optional)','text','Hello!']]};
+let mode='text',lvl=0,mods=null,vals={};
+const ESC=s=>s.replace(/([\\;,:"])/g,'\\$1');
+
+// Full international digits from what the user typed (country code is added automatically)
+function waNum(){
+ const raw=(vals.n||'').trim(),c=cc.code;let d=raw.replace(/\D/g,'');
+ if(!d)return '';
+ if(raw[0]==='+')return d;
+ if(d.startsWith('00'))return d.replace(/^0+/,'');
+ d=d.replace(/^0+/,'');if(!d)return '';
+ if(d.startsWith(c)&&d.length>=c.length+9)return d;
+ if(c.length>1&&c[0]==='1'&&d.length===10&&d.startsWith(c.slice(1)))return '1'+d;
+ return c+d}
+function build(){const v=vals;
+ if(mode==='text')return (v.v||'').trim();
+ if(mode==='wifi')return v.s?`WIFI:T:${v.p?'WPA':'nopass'};S:${ESC(v.s)};${v.p?'P:'+ESC(v.p)+';':''};`:'';
+ const n=waNum();return n.length>=7?'https://wa.me/'+n+(v.m?'?text='+encodeURIComponent(v.m):''):''}
+function enc(text,l){const b=String.fromCharCode(...new TextEncoder().encode(text));
+ for(let t=1;t<=40;t++){try{const q=new QRLib(t,l);q.addData(b);q.make();return q}catch(e){}}return null}
+function render(){
+ const text=build();let q=null;
+ if(text)q=enc(text,lvl);
+ $('#dp').disabled=$('#ds').disabled=!q;
+ if(!q){mods=null;box.innerHTML=text?'<p class="qrh">That is too long for a QR code. Try something shorter.</p>':'<p class="qrh">Your QR code will appear here.</p>';return}
+ const n=q.getModuleCount();mods=[];let d='';
+ for(let r=0;r<n;r++){let run=0;mods.push([]);for(let c=0;c<=n;c++){const on=c<n&&q.isDark(r,c);if(c<n)mods[r].push(on);if(on)run++;else if(run){d+=`M${c-run+4} ${r+4}h${run}v1h-${run}z`;run=0}}}
+ const s=n+8;window._svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${s} ${s}" shape-rendering="crispEdges"><rect width="${s}" height="${s}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+ box.innerHTML=window._svg;box.firstChild.setAttribute('role','img');box.firstChild.setAttribute('aria-label','QR code')}
+
+/* ---------- Form ---------- */
+const field=([k,l,t,p])=>`<label class="fld"><span>${l}</span><input data-k="${k}" type="${t}" placeholder="${p}" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" value="${esc(vals[k]||'')}"></label>`;
+const chev='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>';
+function ccBtn(){const b=$('#cc');if(b)b.innerHTML=`<i class="iso">${cc.iso}</i><b>${dial(cc)}</b>${chev}`}
+function hint(){hint0()}
+function hint0(){const h=$('#wh');if(!h)return;const n=waNum(),t=n?'Opens a chat with +'+n:'Type the number without the country code. A leading 0 is removed for you.',s=!!n;if(h._s===s){const sp=h.querySelector('span:not([data-g])');if(sp)sp.textContent=t;else h.textContent=t;h._bt=t}else{const first=h._s===undefined;h._s=s;GlassKit.blend(h,t,!first)}}
+function fields(){const f=$('#form');window.GlassKit?GlassKit.morph(f,fields0):fields0()}
+function fields0(){
+ $('#form').innerHTML=mode==='wa'
+  ?`<div class="fld"><span id="pl">Phone number</span><div class="phone"><button type="button" class="cc" id="cc" aria-haspopup="dialog" aria-label="Choose country code"></button><input id="pn" data-k="n" type="tel" inputmode="tel" autocomplete="off" aria-labelledby="pl" placeholder="812 3456 7890" value="${esc(vals.n||'')}"></div><small class="hint" id="wh"></small></div>`+F.wa.map(field).join('')
+  :F[mode].map(field).join('');
+ if(mode==='wa'){ccBtn();hint0()}}
+$('#form').oninput=e=>{const k=e.target.dataset.k;if(k){vals[k]=e.target.value;if(k==='n')hint();render()}};
+$('#form').onclick=e=>{if(e.target.closest('#cc'))openSheet()};
+
+/* ---------- Country picker ---------- */
+const sheet=document.createElement('div');sheet.className='sheet';
+sheet.innerHTML='<div class="sc"></div><div class="pn" role="dialog" aria-modal="true" aria-label="Choose country" tabindex="-1"><div class="pt"><div class="ph"><b>Choose country</b><button type="button" class="px" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><input class="ps" type="search" placeholder="Search country or code" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search country or code"></div><div class="plist" role="listbox" aria-label="Countries"></div></div>';
+document.body.append(sheet);
+const pn=sheet.querySelector('.pn'),ps=sheet.querySelector('.ps'),pl=sheet.querySelector('.plist');
+function list(q=''){
+ q=nrm(q.trim());const num=/^\+?[\d\s]+$/.test(q),dq=q.replace(/\D/g,'');
+ const items=CC.filter(c=>!q||(num?c.code.startsWith(dq):c.key.includes(q)||c.iso.toLowerCase()===q));
+ let h='',L='';
+ for(const c of items){
+  const l=c.key[0].toUpperCase();
+  if(!q&&l!==L){L=l;h+=`<div class="lh">${l}</div>`}
+  h+=`<button type="button" class="ci${c.iso===cc.iso?' sel':''}" role="option" aria-selected="${c.iso===cc.iso}" data-i="${c.iso}"><i class="iso">${c.iso}</i><span class="nm">${esc(c.name)}</span><b>${dial(c)}</b></button>`}
+ pl.innerHTML=h||'<p class="pe">No country found.</p>'}
+const vv=window.visualViewport;
+function fit(){const h=vv?vv.height:innerHeight;sheet.style.setProperty('--vh',h+'px');sheet.style.setProperty('--vt',(vv?vv.offsetTop:0)+'px');sheet.classList.toggle('kb',h<innerHeight-120)}
+let fr;const sched=()=>{cancelAnimationFrame(fr);fr=requestAnimationFrame(fit)};
+if(vv){vv.addEventListener('resize',sched);vv.addEventListener('scroll',sched)}
+addEventListener('orientationchange',()=>setTimeout(fit,300));
+function openSheet(){
+ ps.value='';list();fit();
+ sheet.classList.add('open');GlassKit.dim(true);
+ for(const e of [$('header'),$('main')])e.inert=true;
+ document.body.style.overflow='hidden';
+ const s=pl.querySelector('.sel');if(s)pl.scrollTop=s.offsetTop-pl.clientHeight/2+s.offsetHeight/2;
+ (matchMedia('(pointer:fine)').matches?ps:pn).focus({preventScroll:true})}
+function closeSheet(){
+ if(!sheet.classList.contains('open'))return;
+ sheet.classList.remove('open');GlassKit.dim(false);
+ for(const e of [$('header'),$('main')])e.inert=false;
+ document.body.style.overflow='';
+ const b=$('#cc');if(b)b.focus({preventScroll:true})}
+function pick(iso){
+ const c=CC.find(x=>x.iso===iso);if(!c)return;
+ cc=c;store('qrcc',c.iso);ccBtn();hint();render();closeSheet();
+ const i=$('#pn');if(i&&matchMedia('(pointer:fine)').matches)i.focus()}
+pl.onclick=e=>{const b=e.target.closest('.ci');if(b)pick(b.dataset.i)};
+ps.oninput=()=>{list(ps.value);pl.scrollTop=0};
+ps.onkeydown=e=>{if(e.key==='Enter'){const b=pl.querySelector('.ci');if(b)pick(b.dataset.i)}};
+sheet.querySelector('.sc').onclick=closeSheet;
+sheet.querySelector('.px').onclick=closeSheet;
+addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+
+/* ---------- Sliders ---------- */
+Seg($('#tabs'),0,i=>{mode=MODES[i];fields();render()});
+Seg($('#ec'),1,i=>{lvl=LV[i];GlassKit.blend($('#ecn'),NOTE[i]);render()});
+$('#ecn').textContent=NOTE[1];
+
+/* ---------- Layout desktop: kartu Error correction pindah ke kolom kiri ---------- */
+const opt=$('#opt'),mq=matchMedia('(min-width:960px)');
+const place=()=>{if(mq.matches){opt.className='opt glass form';$('#ctl').append(opt)}else{opt.className='opt';$('#qb').insertBefore(opt,$('#qb .eb'))}};
+mq.addEventListener('change',place);place();
+
+/* ---------- Save ---------- */
+function save(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+$('#ds').onclick=()=>window._svg&&save(new Blob([window._svg],{type:'image/svg+xml'}),'qr-code.svg');
+$('#dp').onclick=()=>{if(!mods)return;const n=mods.length,s=n+8,k=Math.ceil(1024/s),c=document.createElement('canvas');c.width=c.height=s*k;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.fillStyle='#000';
+ mods.forEach((row,r)=>row.forEach((on,i)=>on&&x.fillRect((i+4)*k,(r+4)*k,k,k)));c.toBlob(b=>save(b,'qr-code.png'),'image/png')};
+fields();render();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="A short, plain guide to saving videos with GlassGrab and making QR codes with GlassQR.">
+<title>How to use - GlassKit</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23111'/%3E%3Cpath d='M16 7v13M10.500 15l5.500 5.500 5.500-5.500M9 25h14' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="canonical" href="__ORIGIN__/how">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
+<meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="How to use - GlassKit"><meta property="og:description" content="A short, plain guide to saving videos with GlassGrab and making QR codes with GlassQR."><meta property="og:url" content="__ORIGIN__/how"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
+<script>
+try{var s=localStorage.getItem('theme')}catch(e){}
+document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
+</script>
+<link rel="stylesheet" href="/base.css?v=8">
+<link rel="stylesheet" href="/ui.css?v=17">
+<script src="/shell.js?v=26" defer></script>
+<style>
+.how{padding:20px;margin-top:12px;display:flex;flex-direction:column;gap:12px}
+.hh{display:flex;align-items:center;gap:12px}.hh h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.lead{color:var(--t2);font-size:15px;line-height:1.45}
+.st{list-style:none;padding:0;display:flex;flex-direction:column;gap:14px}
+.st li{display:flex;gap:12px;align-items:flex-start}
+.st i{flex:none;width:24px;height:24px;margin-top:1px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--mono);font-style:normal;background:var(--ac);color:var(--act)}
+.st b{font-size:16px;font-weight:600}.st p{color:var(--t2);font-size:15px;line-height:1.45;margin-top:2px}
+.note{font-size:14px;line-height:1.45;color:var(--t2);background:var(--fill);border-radius:14px;padding:12px 14px}
+details{border-top:.5px solid rgba(127,127,127,.3)}details:first-of-type{border-top:0}
+summary{list-style:none;cursor:pointer;padding:14px 0;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";flex:none;width:8px;height:8px;border-right:2px solid var(--t2);border-bottom:2px solid var(--t2);rotate:45deg;translate:0 -2px;transition:rotate .3s var(--spring),translate .3s var(--spring)}
+details[open] summary::after{rotate:225deg;translate:0 2px}
+details p{color:var(--t2);font-size:15px;line-height:1.45;padding-bottom:14px}
+.cta{display:flex;gap:8px;margin-top:12px}.cta a{flex:1;display:grid;place-items:center;text-decoration:none;max-width:none}
+</style>
+</head>
+<body>
+<header>
+  <button class="mb" id="mb" aria-label="Open menu" aria-expanded="false" aria-controls="dr"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <button class="sw" id="tsw" role="switch" aria-label="Dark mode"><span class="kn">
+    <svg class="moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+  </span></button>
+</header>
+<main>
+  <h1>How to use GlassKit</h1>
+  <p class="sub">Two small tools, no account needed. Here is how each one works.</p>
+
+  <section class="glass how">
+    <div class="hh"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></span><h2>GlassGrab</h2></div>
+    <p class="lead">Save a public video from a link.</p>
+    <ol class="st">
+      <li><i>1</i><div><b>Copy the link</b><p>Open the video in Instagram, TikTok, Facebook, or X (formerly Twitter), tap Share, then Copy link.</p></div></li>
+      <li><i>2</i><div><b>Paste it</b><p>In GlassGrab, tap Paste (or paste into the box yourself), then tap Get video. This takes a few seconds.</p></div></li>
+      <li><i>3</i><div><b>Choose a format</b><p>You will see the best options first: the highest quality, the most compatible, and audio only. Tap More formats if you want other sizes or qualities.</p></div></li>
+      <li><i>4</i><div><b>Download</b><p>Tap your choice and keep the page open while the file is prepared. When it is ready, the download starts.</p></div></li>
+    </ol>
+    <p class="note">Only public videos work, and not every link can be downloaded. If something fails, the message on screen tells you what to try.</p>
+  </section>
+
+  <section class="glass how">
+    <div class="hh"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2M14 19h2"/></svg></span><h2>GlassQR</h2></div>
+    <p class="lead">Make a QR code that anyone can scan.</p>
+    <ol class="st">
+      <li><i>1</i><div><b>Pick a type</b><p>Link or text for websites and notes, Wi-Fi so friends can join your network, or WhatsApp to open a chat with you.</p></div></li>
+      <li><i>2</i><div><b>Type your details</b><p>The code updates as you type. Nothing is sent anywhere, because it is made on your device.</p></div></li>
+      <li><i>3</i><div><b>Adjust the strength</b><p>Low is the simplest code, Medium suits most uses, and High still scans when the code is dirty or partly covered.</p></div></li>
+      <li><i>4</i><div><b>Save it</b><p>Save PNG gives you an image to share. Save SVG stays sharp at any size, which is best for printing.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="glass how">
+    <h2>Common questions</h2>
+    <div>
+      <details><summary>Why did my link not work?</summary><p>Private videos, videos that need a login, deleted videos, and pages that are not a single video (like profiles or search results) cannot be downloaded. Open the link in your browser first and check that it plays without signing in. Platforms also change often, so try again later if it used to work.</p></details>
+      <details><summary>Why is the first try slow?</summary><p>The server can go to sleep when nobody has used it for a while. The first request wakes it up, which may take a little longer. After that it is quick.</p></details>
+      <details><summary>What if I leave while a file is preparing?</summary><p>GlassGrab asks before you leave, because a file that is still being prepared would be lost. If a file is ready but you were in another app when it finished, a Download button waits at the bottom of the page until you save it.</p></details>
+      <details><summary>Are my links or files saved?</summary><p>No. Video files are prepared temporarily, offered once, then deleted. Your last few links stay only in your own browser under Recent, and you can clear them any time.</p></details>
+      <details><summary>Can I add it to my home screen?</summary><p>Yes. In Safari, tap Share, then Add to Home Screen. In Chrome, open the menu and choose Install app or Add to Home screen.</p></details>
+      <details><summary>What am I allowed to download?</summary><p>Only content you own, are licensed to use, or may use personally under the law where you live. See Privacy &amp; Terms for the full rules.</p></details>
+    </div>
+  </section>
+
+  <div class="cta"><a class="btn" href="/grab">Open GlassGrab</a><a class="ghost" href="/qr">Open GlassQR</a></div>
+  <p class="foot"><a class="lk" href="/legal">Privacy &amp; Terms</a></p>
+  <p class="credit"><b translate="no">Made by Joel G. Thompson</b><span>A small side project, built with AI.</span></p>
+</main>
+</body>
+</html>
