@@ -207,3 +207,5 @@ html.theming .qrc{transition-property:none}
 .dlg .eb{display:flex;flex-direction:column;gap:8px}
 .dlg .btn,.dlg .ghost{width:100%;max-width:none;height:46px}
 .dlg .ghost{background:var(--fill)}
+
+.dlg.flat .box{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--card)}

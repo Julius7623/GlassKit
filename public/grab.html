@@ -17,7 +17,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from supported links"><meta property="og:description" content="Download public videos from Instagram, TikTok, Facebook, and X (formerly Twitter) when the link is supported. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=8">
-<link rel="stylesheet" href="/ui.css?v=17">
+<link rel="stylesheet" href="/ui.css?v=18">
 <script src="/shell.js?v=26" defer></script>
 
 </head>
@@ -49,7 +49,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 const L={en:{doc:'GlassGrab - Download videos from supported links',h1:'Download videos from supported links',sub:'Instagram, TikTok, Facebook, and X (formerly Twitter). Public videos only, and some links may not work.',ph:'Paste a video link',paste:'Paste',go:'Get video',empty:'Paste a public video link to get started.',foot:'For content you own, are licensed to use, or need for personal use. Links and files are never stored.',rec:'Recommended',rech:'The best picks for most people',more:'More formats',less:'Fewer formats',av:'Video with audio',avh:'Plays on most devices',vo:'Video only',voh:'Best audio is added automatically',ao:'Audio only',aoh:'Just the sound',upto:'Up to ',one:'1 format',many:' formats',aud:'audio',best:'Best quality',compat:'Most compatible',small:'Smallest size',unk:'Size unknown',prep:'Preparing…',started:'Download started · ',clip:'Clipboard access is off. Paste the link manually.',look:'Finding your video…',wait:'Fetching details and formats. This usually takes a few seconds.',wait2:'One moment. Your file is still being prepared.',slow:'Still working. The server is waking up, which can take a moment.'}};
 const $=s=>document.querySelector(s),u=$('#u'),out=$('#out'),tt=$('#t');
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}};
-const lang='en';let cur=null,lastErr=null;
+const lang='en';let cur=null,lastErr=null,looking=0,ac=null;
 const t=k=>L[lang][k];
 const pickUrl=s=>{const m=String(s||'').match(/https?:\/\/[^\s<>"']+/i);return m?m[0].replace(/[)\]}.,;:!?]+$/,''):''}; // ambil link dari teks share (TikTok/IG menyalin teks + link)
 const sites={instagram:'Instagram',facebook:'Facebook','fb.':'Facebook',tiktok:'TikTok','x.com':'X',twitter:'X',reddit:'Reddit',vimeo:'Vimeo',twitch:'Twitch'};
@@ -140,14 +140,14 @@ async function load(){
   let url=pickUrl(u.value)||u.value.trim();if(url!==u.value.trim()){u.value=url;u.oninput()}
   if(url&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(url)&&/^[^\s\/]+\.[^\s\/]{2,}(\/|$|\?)/.test(url)){url='https://'+url.replace(/^\/+/,'');u.value=url;u.oninput()}
   if(!/^https?:\/\//i.test(url)){const b=$('.bar');b.classList.remove('shake');void b.offsetWidth;b.classList.add('shake');return say("That doesn't look like a link. Paste the full address, starting with http or https.",4500)}
-  cur=lastErr=null;loading();
+  cur=lastErr=null;loading();looking=1;ac=new AbortController();const sig=ac.signal;
   try{
     const c=infoCache.get(url);let d;
     if(c&&Date.now()-c.t<3e5)d=c.d; // link sama dalam 5 menit: tanpa permintaan baru ke server
-    else{const r=await fetch('/api/info?url='+encodeURIComponent(url));d=await r.json();
+    else{const r=await fetch('/api/info?url='+encodeURIComponent(url),{signal:sig});d=await r.json();
       if(!r.ok)throw Object.assign(Error(d.error),{status:r.status,code:d.code});infoCache.set(url,{d,t:Date.now()})}
-    cur=d;cur.src=url;show(d);remember(url,d.title);
-  }catch(e){fail(e)}finally{done()}
+    cur=d;cur.src=url;show(d);remember(url,d.title);try{sessionStorage.setItem('gk:u',url)}catch{}
+  }catch(e){if(e.name!=='AbortError')fail(e)}finally{looking=0;done()}
 }
 
 function show(d){
@@ -217,7 +217,7 @@ out.onclick=async ev=>{
 u.oninput=()=>{keepUrl=u.value;const b=$('#bd'),v=u.value.trim(),x=site(v);
   if(x){b.innerHTML=IC[x]||IC.Link;b.setAttribute('aria-label',disp(x));b.title=disp(x);b.classList.remove('hide')}else b.classList.add('hide');
   xb.classList.toggle('hide',!v);gh.classList.toggle('hide',!!v)};
-xb.onclick=()=>{if(xb.disabled)return;u.value='';cur=lastErr=null;clearTimeout(slowT);u.oninput();put(emptyHTML());u.focus()};
+xb.onclick=()=>{if(xb.disabled)return;u.value='';try{sessionStorage.removeItem('gk:u')}catch{}cur=lastErr=null;clearTimeout(slowT);u.oninput();put(emptyHTML());u.focus()};
 u.onpaste=e=>{const x=(e.clipboardData||window.clipboardData).getData('text'),l=pickUrl(x);if(l&&l!==x.trim()){e.preventDefault();u.value=l} // input type=url membuang baris baru, jadi ambil link sebelum disisipkan
   setTimeout(()=>{u.oninput();load()},60)};
 u.onkeydown=e=>{if(e.key==='Enter')load()};
@@ -237,11 +237,14 @@ function showReady(){
 function hideReady(){if(rdy){const r=rdy;rdy=null;r.classList.remove('on');setTimeout(()=>r.remove(),600)}}
 function hold(p){pend=p;syncBack();clearTimeout(hold.t);hold.t=setTimeout(()=>{pend=null;syncBack();hideReady();document.title=baseTitle},9*60e3);document.title='\u2713 File ready \u00b7 '+baseTitle;showReady()}
 function save(){if(!pend)return;const p=pend;pend=null;syncBack();clearTimeout(hold.t);hideReady();document.title=baseTitle;p.go();stp(3);say(t('started')+MB(p.size,true))}
+// bar progres tak pasti: mulai ulang animasinya (kalau sempat macet), kecuali sudah berupa progres nyata
+function restartBar(){const i=document.querySelector('.pgb i');if(i&&i.style.animation!=='none'){i.style.animation='none';void i.offsetWidth;i.style.animation=''}}
 function ask(kind,go){
   const rd=kind==='ready',d=document.createElement('div');d.className='dlg';d.setAttribute('role','alertdialog');d.setAttribute('aria-modal','true');
   d.innerHTML=`<div class="box"><h2>${rd?"Your file isn't saved yet":'Leave while preparing?'}</h2><p>${rd?"It's ready but hasn't been downloaded. If you leave now, it will be lost.":"Your file is still being prepared. If you leave now, you'll need to start again."}</p><div class="eb"><button class="btn" type="button" data-a="stay">${rd?'Download':'Stay on page'}</button><button class="ghost" type="button" data-a="leave">${rd?'Leave anyway':'Leave'}</button></div></div>`;
+  if(out.dataset.busy)d.classList.add('flat');   // tanpa blur latar saat proses jalan: iOS bisa membekukan animasi di bawah lapisan blur
   document.body.append(d);void d.offsetWidth;d.classList.add('on');
-  const close=()=>{d.classList.remove('on');setTimeout(()=>d.remove(),400);document.removeEventListener('keydown',esc)},esc=e=>{if(e.key==='Escape')close()};
+  const close=()=>{d.classList.remove('on');setTimeout(()=>d.remove(),400);restartBar();setTimeout(restartBar,120);setTimeout(restartBar,480);document.removeEventListener('keydown',esc)},esc=e=>{if(e.key==='Escape')close()};
   document.addEventListener('keydown',esc);
   d.onclick=e=>{const a=e.target.closest('button');if(a){if(a.dataset.a==='leave'){leaving=1;close();go()}else{close();if(rd)save()}}else if(e.target===d)close()};
   d.querySelector('.btn').focus()}
@@ -254,7 +257,7 @@ document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest
 // refresh, tutup tab, atau mengetik alamat lain
 addEventListener('beforeunload',e=>{if(guard()){e.preventDefault();e.returnValue=''}});
 // kembali ke tab ini: ingatkan apa yang masih menunggu
-document.addEventListener('visibilitychange',()=>{if(document.hidden)return;restoreUrl();
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;restoreUrl();restartBar();
   if(pend){showReady();rdy.classList.remove('nudge');void rdy.offsetWidth;rdy.classList.add('nudge')}
   else if(out.dataset.busy)say('Still preparing. Keep this page open.',3500)});
 // geser-kembali / tombol back: tambah satu entri riwayat selama ada yang harus dijaga, lalu tanyakan sebelum benar-benar pergi
@@ -266,15 +269,19 @@ addEventListener('popstate',()=>{
   if(ignorePop){ignorePop--;return}
   if(!gEntry)return;
   const k=guard();if(!k){gEntry=false;return}
-  history.pushState({gk:1},'');
-  ask(k,()=>{gEntry=false;history.go(-2)})});
+  ask(k,()=>{gEntry=false;history.go(-2)});   // dialog dulu, baru tambah entri riwayat (pushState di tengah animasi geser-kembali iOS lambat)
+  requestAnimationFrame(()=>history.pushState({gk:1},''))});
 // kembali ke halaman ini dari riwayat: Safari mengosongkan kolom link (autocomplete=off), kembalikan isinya
 addEventListener('pageshow',e=>{if(!e.persisted)return;leaving=0;gEntry=!!(history.state&&history.state.gk);
   restoreUrl();[60,250,700].forEach(ms=>setTimeout(restoreUrl,ms))}); // Safari bisa mengosongkan kolom sesudah pageshow, jadi coba beberapa kali
 // isi kolom link hanya dikembalikan kalau kosong DAN hasil lama masih tampil, supaya tidak menimpa ketikan baru
-function restoreUrl(){const k=(cur&&cur.src)||'';if(k&&!u.value){u.value=k;u.oninput()}}
+// pergi dari halaman saat Get video masih mencari: batalkan, tampilan kembali kosong (link tetap di kolom)
+function cancelLookup(){if(!looking)return;looking=0;try{ac.abort()}catch{}cur=lastErr=null;done();put(emptyHTML())}
+addEventListener('pagehide',cancelLookup);
+function restoreUrl(){const k=keepUrl;if(k&&!u.value){u.value=k;u.oninput()}}
 const q=new URLSearchParams(location.search),pre=q.get('url')||q.get('text');
 if(pre){u.value=pickUrl(pre)||pre.trim();u.oninput();load()}
+else{try{const nv=performance.getEntriesByType('navigation')[0],s=sessionStorage.getItem('gk:u');if(nv&&nv.type==='back_forward'&&s){u.value=s;u.oninput();load()}}catch{}} // halaman dimuat ulang saat kembali: isi lagi link terakhir dan cari ulang
 </script>
 </body>
 </html>
