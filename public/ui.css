@@ -157,7 +157,7 @@ html[data-theme=dark]{color-scheme:dark}
 html[data-theme=light]{color-scheme:light}
 
 /* Tombol hapus berupa teks "Clear": tidak tertukar dengan ikon platform X */
-.bar .clr{position:relative;width:auto;height:34px;max-width:90px;padding:0 12px;border-radius:99px;background:var(--fill);color:var(--t);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap}
+.bar .clr{width:auto;height:34px;max-width:90px;padding:0 12px;border-radius:99px;background:var(--fill);color:var(--t);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap}
 .bar .clr::before,.bar .clr svg{display:none}
 .bar .clr::after{content:"Clear"}
 .bar .clr.hide{max-width:0;padding:0;margin-left:-8px}
