@@ -123,3 +123,20 @@ const mk=n=>{let m=D.querySelector('meta[name='+n+']');if(!m){m=D.createElement(
 const sync=()=>{const d=R.dataset.theme==='dark';mk('theme-color').content=d?'#000':'#f2f2f7';mk('color-scheme').content=d?'dark':'light'};
 new MutationObserver(()=>{R.classList.add('theming');clearTimeout(t);t=setTimeout(()=>R.classList.remove('theming'),650);sync()}).observe(R,{attributes:true,attributeFilter:['data-theme']});sync();
 })();
+(()=>{ // Tombol "Clear" otomatis di setiap kolom ketik (kolom link GlassGrab punya tombolnya sendiri)
+const D=document,OK=/^(text|url|tel|search|password|email)$/i;
+const enhance=i=>{
+ if(i.dataset.cw||i.id==='u'||i.hasAttribute('data-noclear')||i.readOnly||!OK.test(i.type||'text'))return;
+ i.dataset.cw=1;
+ const w=D.createElement('span'),b=D.createElement('button'),lb=i.getAttribute('aria-label')||(i.closest('label')&&i.closest('label').textContent)||i.placeholder||'';
+ w.className='cw';b.type='button';b.className='cl';b.textContent='Clear';b.setAttribute('aria-label','Clear '+lb.trim());
+ i.replaceWith(w);w.append(i,b);
+ const sync=()=>w.classList.toggle('has',!!i.value&&!i.disabled);
+ i.addEventListener('input',sync);i.addEventListener('change',sync);
+ b.addEventListener('pointerdown',e=>e.preventDefault()); // keyboard tetap terbuka
+ b.addEventListener('click',()=>{i.value='';i.dispatchEvent(new Event('input',{bubbles:true}));i.focus({preventScroll:true})});
+ sync()};
+const scan=r=>(r.matches&&r.matches('input')?[r]:[...(r.querySelectorAll?r.querySelectorAll('input'):[])]).forEach(enhance);
+const run=()=>{scan(D.body);new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>n.nodeType===1&&scan(n)))).observe(D.body,{childList:true,subtree:true})};
+D.readyState==='loading'?D.addEventListener('DOMContentLoaded',run):run();
+})();

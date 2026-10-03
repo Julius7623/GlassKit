@@ -169,3 +169,12 @@ html[data-theme=light]{color-scheme:light}
 .mx{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s var(--e)}
 .mx>div{min-height:0;overflow:hidden}
 .mx.open{grid-template-rows:1fr}
+
+/* Tombol Clear otomatis di setiap kolom ketik: muncul hanya saat ada isi */
+.cw{position:relative;display:flex;flex:1 1 auto;min-width:0}
+.cw input{flex:1;min-width:0;width:100%;transition:padding-right .2s var(--e)}
+.cw.has input{padding-right:84px}
+.cl{position:absolute;right:8px;top:50%;translate:0 -50%;height:30px;padding:0 12px;border-radius:99px;background:rgba(127,127,127,.22);color:var(--t);font-size:13px;font-weight:600;opacity:0;scale:.9;pointer-events:none;transition:opacity .2s var(--e),scale .35s var(--spring)}
+.cw.has .cl{opacity:1;scale:1;pointer-events:auto}
+.pt .cw{display:block;margin:4px 16px 0}.pt .cw .ps{width:100%;margin:0}
+input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
