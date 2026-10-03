@@ -54,7 +54,7 @@ const CHANNEL = process.env.YTDLP_CHANNEL || 'nightly'; // 'nightly' = perbaikan
 const MSG = {
   BAD_URL: 'Link tidak valid',
   ADDR: 'Alamat tidak diizinkan',
-  BOT: 'YouTube memblokir permintaan dari server ini',
+  BOT: 'Situs ini memblokir permintaan dari server ini',
   LOGIN: 'Platform meminta login untuk video ini',
   PRIVATE: 'Video ini privat',
   BLOCKED: 'Platform memblokir permintaan dari server ini',
