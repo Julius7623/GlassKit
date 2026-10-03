@@ -119,3 +119,29 @@ html:not(.ready) .sw,html:not(.ready) .sw *{transition:none!important}
 html[data-theme=dark] .sw{background:#636366;--x:20px}
 html[data-theme=dark] .sw .sun{opacity:1;transform:none}
 html[data-theme=dark] .sw .moon{opacity:0;transform:scale(.6)}
+
+/* ===== Clean layer (gaya Apple): permukaan datar, glass hanya untuk lapisan melayang ===== */
+:root{--bg:#f2f2f7;--card:#fff;--fill:rgba(120,120,128,.12)}
+[data-theme=dark]{--bg:#000;--card:#1c1c1e;--fill:rgba(120,120,128,.24)}
+main .glass,.fmt,.rc{background:var(--card);border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;border-radius:20px}
+main .glass::before{display:none}
+.ghost,.mb{background:var(--fill);border:0;-webkit-backdrop-filter:none;backdrop-filter:none}
+.bar:focus-within{box-shadow:var(--ring)}
+.seg{box-shadow:none;background:var(--fill)}
+h1{font-size:clamp(28px,8.2vw,36px);letter-spacing:-.03em;margin:20px 0 6px}
+.sub{font-size:15px;line-height:1.4;margin:0 auto 20px;max-width:36ch}
+.empty{display:none}
+.foot{font-size:12px;line-height:1.5;margin-top:24px}
+.foot .lk{color:var(--t2);text-decoration-color:rgba(127,127,127,.4)}
+.credit{border-top:0;margin-top:12px;padding-top:0;font-size:11.5px}
+.card .chip,.card.live .chip{display:none}
+.card{gap:4px;padding:18px}.card b{font-size:17px;font-weight:600}.card p{font-size:13px}
+.th{border-radius:12px}
+.src{font-size:11px;font-weight:600;letter-spacing:.04em}
+.rch b{font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--t2)}
+.rc{margin-bottom:6px}
+.qrc{border-radius:16px}
+.steps{margin-bottom:var(--s4)}
+.steps:not(:has(.done)){display:none}
+.steps i{width:20px;height:20px;font-size:11px}
+.steps li{font-size:13px}

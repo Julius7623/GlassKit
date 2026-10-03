@@ -17,7 +17,7 @@ try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
 <link rel="stylesheet" href="/base.css?v=8">
-<link rel="stylesheet" href="/ui.css?v=10">
+<link rel="stylesheet" href="/ui.css?v=11">
 <script src="/shell.js?v=23" defer></script>
 <style>
 /* Slider segmented control (same feel as the dark mode switch) */
@@ -132,7 +132,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 </header>
 <main>
   <h1>Create a QR code</h1>
-  <p class="sub">Type or paste anything. The code updates as you go, and nothing leaves your device.</p>
+  <p class="sub">Type or paste anything. The code updates as you go.</p>
   <div class="qrgrid">
   <div class="ctl" id="ctl">
   <div class="seg" id="tabs" role="tablist" aria-label="QR code type">
