@@ -17,7 +17,7 @@ document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dar
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GlassKit">
 <meta property="og:type" content="website"><meta property="og:site_name" content="GlassKit"><meta property="og:title" content="GlassGrab - Download videos from supported links"><meta property="og:description" content="Download public videos from Instagram, TikTok, Facebook, and X (formerly Twitter) when the link is supported. Free, no ads, no sign-up."><meta property="og:url" content="__ORIGIN__/grab"><meta property="og:image" content="__ORIGIN__/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="/base.css?v=8">
-<link rel="stylesheet" href="/ui.css?v=16">
+<link rel="stylesheet" href="/ui.css?v=17">
 <script src="/shell.js?v=26" defer></script>
 
 </head>
@@ -205,8 +205,10 @@ out.onclick=async ev=>{
     const r=await fetch(`/api/prepare?url=${encodeURIComponent(u.value.trim())}&f=${encodeURIComponent(f)}&k=${k}&e=${e}&h=${h||0}&i=${(cur&&cur.item)||1}`),j=await r.json();
     if(!r.ok)throw Object.assign(Error(j.error),{status:r.status,code:j.code});
     const d=await poll(j.id,p=>{pc=p;const i=b.querySelector('.pgb i');if(i&&p>0){i.style.animation='none';i.style.transform='none';i.style.width=p+'%';i.style.transition='width .6s'}});
-    const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;document.body.append(l);l.click();l.remove();
-    stp(3);say(t('started')+MB(d.size,true));b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),2600);
+    const go=()=>{const l=document.createElement('a');l.href='/api/file/'+d.token;l.download=d.name;document.body.append(l);l.click();l.remove()};
+    if(document.hidden)hold({go,name:d.name,size:d.size}); // pengguna sedang di tab/aplikasi lain: unduhan otomatis bisa diblokir, jadi tunggu ketukan
+    else{go();stp(3);say(t('started')+MB(d.size,true))}
+    b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),2600);
   }catch(x){const e2=explain(x);say(e2.title+'. '+e2.tip,5200)}
   finally{clearInterval(tick);delete out.dataset.busy;out.querySelectorAll('.fmt[aria-disabled]').forEach(x=>x.removeAttribute('aria-disabled'));lock(false);b.classList.remove('busy');M(b,()=>{b.innerHTML=old},{fade:false});b.disabled=false}
 };
@@ -223,6 +225,38 @@ $('#go').onclick=load;
 $('#p').onclick=async()=>{try{const x=await navigator.clipboard.readText();u.value=pickUrl(x)||x.trim();u.oninput();load()}catch{say(t('clip'))}};
 theme(document.documentElement.dataset.theme);apply();put(emptyHTML());requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('ready')));
 if(/FBAN|FBAV|Instagram|TikTok|musical_ly|BytedanceWebview|Line\//i.test(navigator.userAgent))setTimeout(()=>say('Tip: browsers inside apps often block downloads. If nothing saves, open this page in Chrome or Safari.',8000),1500);
+// ---------- Pengingat: jangan sampai pergi saat proses berjalan atau file siap tapi belum tersimpan ----------
+let pend=null,rdy=null,leaving=0;const baseTitle=document.title;
+const guard=()=>leaving?'':out.dataset.busy?'busy':pend?'ready':'';
+function showReady(){
+  if(!rdy){rdy=document.createElement('div');rdy.className='rdy';rdy.setAttribute('role','status');
+    rdy.innerHTML='<div><b>Your file is ready</b><small></small></div><button class="btn" type="button">Download</button>';
+    rdy.querySelector('button').onclick=save;document.body.append(rdy)}
+  rdy.querySelector('small').textContent=pend.name+(pend.size?' · '+MB(pend.size,true):'');
+  void rdy.offsetWidth;rdy.classList.add('on')}
+function hideReady(){if(rdy){const r=rdy;rdy=null;r.classList.remove('on');setTimeout(()=>r.remove(),600)}}
+function hold(p){pend=p;clearTimeout(hold.t);hold.t=setTimeout(()=>{pend=null;hideReady();document.title=baseTitle},9*60e3);document.title='\u2713 File ready \u00b7 '+baseTitle;showReady()}
+function save(){if(!pend)return;const p=pend;pend=null;clearTimeout(hold.t);hideReady();document.title=baseTitle;p.go();stp(3);say(t('started')+MB(p.size,true))}
+function ask(kind,go){
+  const rd=kind==='ready',d=document.createElement('div');d.className='dlg';d.setAttribute('role','alertdialog');d.setAttribute('aria-modal','true');
+  d.innerHTML=`<div class="box"><h2>${rd?"Your file isn't saved yet":'Leave while preparing?'}</h2><p>${rd?"It's ready but hasn't been downloaded. If you leave now, it will be lost.":"Your file is still being prepared. If you leave now, you'll need to start again."}</p><div class="eb"><button class="btn" type="button" data-a="stay">${rd?'Download':'Stay on page'}</button><button class="ghost" type="button" data-a="leave">${rd?'Leave anyway':'Leave'}</button></div></div>`;
+  document.body.append(d);void d.offsetWidth;d.classList.add('on');
+  const close=()=>{d.classList.remove('on');setTimeout(()=>d.remove(),400);document.removeEventListener('keydown',esc)},esc=e=>{if(e.key==='Escape')close()};
+  document.addEventListener('keydown',esc);
+  d.onclick=e=>{const a=e.target.closest('button');if(a){if(a.dataset.a==='leave'){leaving=1;close();go()}else{close();if(rd)save()}}else if(e.target===d)close()};
+  d.querySelector('.btn').focus()}
+// pindah halaman lewat tautan di web ini: dialog sendiri (peramban di HP sering mengabaikan dialog bawaan)
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a[href]');
+  if(!a||a.hasAttribute('download')||a.target==='_blank'||e.defaultPrevented||e.metaKey||e.ctrlKey)return;
+  let n;try{n=new URL(a.href,location.href)}catch(x){return}
+  if(n.origin!==location.origin||(n.pathname===location.pathname&&n.search===location.search))return;
+  const k=guard();if(!k)return;e.preventDefault();e.stopImmediatePropagation();ask(k,()=>{location.href=a.href})},true);
+// refresh, tutup tab, atau mengetik alamat lain
+addEventListener('beforeunload',e=>{if(guard()){e.preventDefault();e.returnValue=''}});
+// kembali ke tab ini: ingatkan apa yang masih menunggu
+document.addEventListener('visibilitychange',()=>{if(document.hidden)return;
+  if(pend){showReady();rdy.classList.remove('nudge');void rdy.offsetWidth;rdy.classList.add('nudge')}
+  else if(out.dataset.busy)say('Still preparing. Keep this page open.',3500)});
 const q=new URLSearchParams(location.search),pre=q.get('url')||q.get('text');
 if(pre){u.value=pickUrl(pre)||pre.trim();u.oninput();load()}
 </script>

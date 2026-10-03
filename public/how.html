@@ -17,7 +17,7 @@ try{var s=localStorage.getItem('theme')}catch(e){}
 document.documentElement.dataset.theme=s||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 </script>
 <link rel="stylesheet" href="/base.css?v=8">
-<link rel="stylesheet" href="/ui.css?v=16">
+<link rel="stylesheet" href="/ui.css?v=17">
 <script src="/shell.js?v=26" defer></script>
 <style>
 .how{padding:20px;margin-top:12px;display:flex;flex-direction:column;gap:12px}
@@ -77,6 +77,7 @@ details p{color:var(--t2);font-size:15px;line-height:1.45;padding-bottom:14px}
     <div>
       <details><summary>Why did my link not work?</summary><p>Private videos, videos that need a login, deleted videos, and pages that are not a single video (like profiles or search results) cannot be downloaded. Open the link in your browser first and check that it plays without signing in. Platforms also change often, so try again later if it used to work.</p></details>
       <details><summary>Why is the first try slow?</summary><p>The server can go to sleep when nobody has used it for a while. The first request wakes it up, which may take a little longer. After that it is quick.</p></details>
+      <details><summary>What if I leave while a file is preparing?</summary><p>GlassGrab asks before you leave, because a file that is still being prepared would be lost. If a file is ready but you were in another app when it finished, a Download button waits at the bottom of the page until you save it.</p></details>
       <details><summary>Are my links or files saved?</summary><p>No. Video files are prepared temporarily, offered once, then deleted. Your last few links stay only in your own browser under Recent, and you can clear them any time.</p></details>
       <details><summary>Can I add it to my home screen?</summary><p>Yes. In Safari, tap Share, then Add to Home Screen. In Chrome, open the menu and choose Install app or Add to Home screen.</p></details>
       <details><summary>What am I allowed to download?</summary><p>Only content you own, are licensed to use, or may use personally under the law where you live. See Privacy &amp; Terms for the full rules.</p></details>

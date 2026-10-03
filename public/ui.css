@@ -188,3 +188,22 @@ button,a,input{touch-action:manipulation}
 .qrc:has(.qrh){background:var(--fill);outline-color:rgba(127,127,127,.35)}
 .qrc:has(.qrh) .qrh{color:var(--t2)}
 html.theming .qrc{transition-property:none}
+
+/* Pengingat: file siap dan dialog konfirmasi keluar */
+.rdy,.dlg .box{background:color-mix(in srgb,var(--card) 90%,transparent);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);box-shadow:0 12px 40px var(--shc)}
+.rdy{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));z-index:60;width:min(420px,calc(100vw - 32px));translate:-50% 0;display:flex;align-items:center;gap:12px;padding:10px 10px 10px 18px;border-radius:24px;transform:translateY(calc(100% + 48px));opacity:0;transition:transform .5s var(--spring),opacity .3s var(--e)}
+.rdy.on{transform:none;opacity:1}
+.rdy>div{flex:1;min-width:0;display:flex;flex-direction:column}
+.rdy b{font-size:15px;font-weight:600}.rdy small{color:var(--t2);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rdy .btn{height:40px;border-radius:16px;padding:0 18px;font-size:15px}
+.rdy.nudge{animation:nudge .55s var(--spring)}
+@keyframes nudge{35%{scale:1.04}}
+.dlg{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,0);pointer-events:none;transition:background-color .3s var(--e)}
+.dlg.on{background:rgba(0,0,0,.45);pointer-events:auto}
+.dlg .box{width:min(320px,100%);padding:22px 20px 16px;border-radius:28px;text-align:center;scale:.92;opacity:0;transition:scale .45s var(--spring),opacity .25s var(--e)}
+.dlg.on .box{scale:1;opacity:1}
+.dlg h2{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.dlg p{color:var(--t2);font-size:15px;line-height:1.4;margin:6px 0 18px}
+.dlg .eb{display:flex;flex-direction:column;gap:8px}
+.dlg .btn,.dlg .ghost{width:100%;max-width:none;height:46px}
+.dlg .ghost{background:var(--fill)}
