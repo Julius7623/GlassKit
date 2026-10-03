@@ -7,7 +7,8 @@ pdf:'<path d="M7 3h7l4 4v14H7zM14 3v4h4M10 13h5M10 17h5"/>',
 img:'<rect x="4" y="5" width="16" height="14" rx="3"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l4.500-4.500 3 3 2-2L19 17"/>',
 vid:'<rect x="4" y="6" width="12" height="12" rx="3"/><path d="M16 11l4-2.500v7L16 13"/>',
 qr:'<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2M14 19h2"/>',
-txt:'<path d="M5 6h14M12 6v13M9 19h6"/>'};
+txt:'<path d="M5 6h14M12 6v13M9 19h6"/>',
+help:'<circle cx="12" cy="12" r="9"/><path d="M9.600 9.500a2.500 2.500 0 1 1 3.500 2.300c-.7.4-1.100.9-1.100 1.700M12 17h.01"/>'};
 const TOOLS=[
 {n:'GlassGrab',p:'/grab',d:'Download videos from supported links',i:'dl',live:1},
 {n:'GlassQR',p:'/qr',d:'Create QR codes for links, text, Wi-Fi, and WhatsApp',i:'qr',live:1},];
@@ -24,7 +25,7 @@ function mount(){
  const sc=D.createElement('div'),dr=D.createElement('nav');
  sc.className='scrim';dr.className='drawer';dr.id='dr';dr.setAttribute('aria-label','Tools');dr.inert=true;
  dr.innerHTML='<div class="dh"><b>GlassKit</b><button class="x" aria-label="Close menu"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>'
-  +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b> &middot; <a class="lk" href="/legal">Privacy &amp; Terms</a></p>';
+  +[{n:'Home',p:'/',d:'All tools',i:'home',home:1},...TOOLS,{n:'How to use',p:'/how',d:'A short, plain guide',i:'help',home:1}].map(t=>item(t,t.p===here)).join('')+'<p class="dc">Made by <b translate="no">Joel G. Thompson</b> &middot; <a class="lk" href="/legal">Privacy &amp; Terms</a></p>';
  D.body.append(sc,dr);
  const mq=matchMedia('(min-width:1280px)'),side=()=>{if(mq.matches)D.body.classList.remove('menu');dr.inert=mq.matches?false:!D.body.classList.contains('menu')};mq.addEventListener('change',side);side();
  const set=v=>{D.body.classList.toggle('menu',v);tcolor();mb.setAttribute('aria-expanded',v);dr.inert=!v;(v?dr.querySelector('.x'):mb).focus({preventScroll:true})};
