@@ -5,5 +5,12 @@ services:
     plan: free
     healthCheckPath: /healthz
     envVars:
-      - key: YT_COOKIES
+      # --- Opsional, tapi sangat meningkatkan keberhasilan unduhan (lihat catatan di bawah) ---
+      - key: COOKIES_B64        # cookies.txt (format Netscape) yang di-base64: untuk Instagram / Facebook / YouTube yang minta login
+        sync: false
+      - key: PROXY_URL          # proxy residensial, mis. http://user:pass@host:port  (YouTube/TikTok sering memblokir IP datacenter Render)
+        sync: false
+      - key: YTDLP_CHANNEL      # nightly (default) atau stable
+        value: nightly
+      - key: YT_COOKIES         # nama lama, masih didukung
         sync: false
